@@ -7,6 +7,32 @@
 #include "pieces.h"
 #include "board.h"
 
+int count_bits(uint64_t number)
+{
+    int count = 0;
+    while (number)
+    {
+        count += number & 1;
+        number >>= 1;
+    }
+    return count;
+}
+
+int calculate_total_piece_value(Piece pieces[], char color)
+{
+    int total_value = 0;
+    for (int i = 0; i < 12; i++)
+    {
+        if (pieces[i].color == color)
+        {
+            Piece piece = pieces[i];
+            int amount_bits_set = count_bits(*piece.pos_bb);
+            total_value = total_value + (amount_bits_set * piece.value);
+        }
+    }
+    return total_value;
+}
+
 char color_to_move(GameState *game_state)
 {
     return game_state->total_moves % 2 == 0 ? 'w' : 'b';
@@ -560,6 +586,8 @@ selected_wrong_color:
             SDL_RenderClear(renderer);
             render_board(renderer, board, pieces, selected_square, pos_mov, render_bool);
             needs_redraw = 0;
+            printf("Total value white pieces: %d\n", calculate_total_piece_value(pieces, 'w'));
+            printf("Total value black pieces: %d\n", calculate_total_piece_value(pieces, 'b'));
         }
         SDL_Delay(10);
     }
