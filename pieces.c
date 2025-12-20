@@ -424,3 +424,16 @@ uint64_t find_possible_moves(Square input_square, int position, Piece *piece, Ga
 
     return possible_moves;
 }
+
+Piece *get_piece_bb(char piece)
+{
+    Piece *pieces = get_pieces();
+    for (int i = 0; i < 12; i++)
+    {
+        if (pieces[i].symbol == piece)
+        {
+            return &pieces[i];
+        }
+    }
+    return NULL;
+}

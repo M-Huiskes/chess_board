@@ -6,6 +6,7 @@
 
 typedef struct
 {
+    // Dit kan verbeterd door maar 1 symbol ipv hoofdletter om kleur te indiceren
     uint64_t *pos_bb;
     char symbol;
     char color;
@@ -23,5 +24,7 @@ uint64_t find_possible_moves(Square input_square, int position, Piece *piece, Ga
 Piece *find_piece_by_position(int position);
 
 int is_bit_set(uint64_t bb, int position);
+
+Piece *get_piece_bb(char piece);
 
 #endif

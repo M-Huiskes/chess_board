@@ -17,6 +17,8 @@ typedef struct
     char last_move[5];
     char last_moved_piece;
     int play_en_passant;
+    int promote_pawn;
+    char promote_to;
 } GameState;
 
 Square square_from_position(int position);
