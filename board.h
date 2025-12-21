@@ -5,14 +5,12 @@
 #define FILE_OFFSET 'a'
 #define ROW_OFFSET '1'
 
-typedef struct
-{
+typedef struct {
     int file;
     int row;
 } Square;
 
-typedef struct
-{
+typedef struct {
     int total_moves;
     char last_move[5];
     char last_moved_piece;
