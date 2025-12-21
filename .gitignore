@@ -1,0 +1,35 @@
+# Compiled object files
+*.o
+*.obj
+
+# Executables
+chess
+*.out
+*.exe
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Dependency files
+*.d
+
+# VS Code local settings (user-specific)
+.vscode/*.log
+.vscode/launch.json
+.vscode/tasks.json
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+.fuse_hidden*
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
