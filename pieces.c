@@ -317,6 +317,10 @@ uint64_t find_possible_knight_moves(Piece *piece, int position,
             for (int j = 0; j < 2; j++) {
                 int new_pos = pos_1 + hor_step[j];
                 if (check_horizontal_move(pos_1, new_pos)) {
+                    if (is_bit_set(full_board, new_pos) &&
+                        !(is_enemy(piece, new_pos))) {
+                        continue;
+                    }
                     possible_moves |= (uint64_t) 1 << new_pos;
                 }
             }
@@ -326,8 +330,8 @@ uint64_t find_possible_knight_moves(Piece *piece, int position,
             for (int j = 0; j < 2; j++) {
                 int new_hor = pos_2 + ver_dir[j];
                 if (check_vertical_move(new_hor)) {
-                    if (is_bit_set(full_board, position) &&
-                        !(is_enemy(piece, position))) {
+                    if (is_bit_set(full_board, new_hor) &&
+                        !(is_enemy(piece, new_hor))) {
                         continue;
                     }
                     possible_moves |= (uint64_t) 1 << new_hor;
