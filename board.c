@@ -454,7 +454,7 @@ int main()
     SDL_Window *window = SDL_CreateWindow(
         "Chessboard",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        900, 600, SDL_WINDOW_SHOWN);
+        600, 600, SDL_WINDOW_SHOWN);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -586,8 +586,6 @@ selected_wrong_color:
             SDL_RenderClear(renderer);
             render_board(renderer, board, pieces, selected_square, pos_mov, render_bool);
             needs_redraw = 0;
-            printf("Total value white pieces: %d\n", calculate_total_piece_value(pieces, 'w'));
-            printf("Total value black pieces: %d\n", calculate_total_piece_value(pieces, 'b'));
         }
         SDL_Delay(10);
     }

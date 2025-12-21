@@ -6,7 +6,6 @@
 
 typedef struct
 {
-    // Dit kan verbeterd door maar 1 symbol ipv hoofdletter om kleur te indiceren
     uint64_t *pos_bb;
     char symbol;
     char color;
