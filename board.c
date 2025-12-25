@@ -388,7 +388,7 @@ char get_promotion_piece(char color, int row)
 
 int main()
 {
-    GameState game_state = {0, "0000\0", '0', 0, 0, '0'};
+    GameState game_state = {0};
     char board[8][8];
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {

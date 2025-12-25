@@ -17,6 +17,7 @@ typedef struct {
     int play_en_passant;
     int promote_pawn;
     char promote_to;
+    int is_check;
 } GameState;
 
 Square square_from_position(int position);
