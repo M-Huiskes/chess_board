@@ -425,7 +425,6 @@ int main()
     int promotion_rendered = 0;
     uint64_t pos_mov = (uint64_t) 0;
 
-selected_wrong_color:
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
@@ -507,11 +506,6 @@ selected_wrong_color:
                         piece_selected = 0;
                         pos_mov = (uint64_t) 0;
                         needs_redraw = 1;
-                    } else if (piece != NULL &&
-                               (!(piece_selected) ||
-                                !(is_bit_set(pos_mov, position))) &&
-                               color_to_move(&game_state) != piece->color) {
-                        goto selected_wrong_color;
                     } else if (!(piece == NULL)) {
                         piece_selected = 1;
                         pos_mov = find_possible_moves(selected_square, position,
