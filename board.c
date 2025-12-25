@@ -462,6 +462,14 @@ selected_wrong_color:
                     pos_mov = (uint64_t) 0;
                     needs_redraw = 1;
                 } else {
+                    int new_position = get_position(sel_file, sel_row);
+                    Piece *selected_piece =
+                        find_piece_by_position(new_position);
+                    if (selected_piece != NULL &&
+                        color_to_move(&game_state) != selected_piece->color &&
+                        !(is_bit_set(pos_mov, new_position))) {
+                        break;
+                    }
                     selected_square = (Square) {sel_file, sel_row};
                 }
 
@@ -502,7 +510,6 @@ selected_wrong_color:
                                (!(piece_selected) ||
                                 !(is_bit_set(pos_mov, position))) &&
                                color_to_move(&game_state) != piece->color) {
-                        selected_square = (Square) {-1, -1};
                         goto selected_wrong_color;
                     } else if (!(piece == NULL)) {
                         piece_selected = 1;
