@@ -101,10 +101,11 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
 
     if (game_state->play_en_passant) {
         int other_pawn_pos = new_pos;
-        if (game_state->total_moves % 2 == 0) {
-            other_pawn_pos = other_pawn_pos + 8;
-        } else {
+        char color_moving = color_to_move(game_state);
+        if (color_moving == 'w') {
             other_pawn_pos = other_pawn_pos - 8;
+        } else {
+            other_pawn_pos = other_pawn_pos + 8;
         }
         game_state->play_en_passant = 0;
         other_piece = find_piece_by_position(other_pawn_pos);
