@@ -291,7 +291,8 @@ void draw_possible_moves(SDL_Renderer *renderer, char board[8][8],
 }
 
 void render_board(SDL_Renderer *renderer, char board[8][8], Piece pieces[],
-                  Square sel_square, uint64_t pos_mov, int render_bool)
+                  Square sel_square, uint64_t pos_mov, int render_bool,
+                  GameState *game_state)
 {
     for (int row = 0; row < 8; row++) {
         for (int file = 0; file < 8; file++) {
@@ -338,6 +339,30 @@ void render_board(SDL_Renderer *renderer, char board[8][8], Piece pieces[],
     }
     draw_possible_moves(renderer, board, pos_mov);
 
+    if (game_state->is_check) {
+        SDL_SetRenderDrawColor(renderer, 220, 50, 50, 180);
+
+        char color_moving = color_to_move(game_state);
+        int king_index =
+            color_moving == 'w' ? WHITE_KING_INDEX : BLACK_KING_INDEX;
+        int king_position = get_lowest_bit_index(*(pieces[king_index].pos_bb));
+        Square king_square = square_from_position(king_position);
+
+        int center_x = king_square.file * SQUARE_SIZE + SQUARE_SIZE / 2;
+        int center_y = (7 - king_square.row) * SQUARE_SIZE + SQUARE_SIZE / 2;
+        int radius = SQUARE_SIZE / 2;
+
+        for (int w = 0; w < radius * 2; w++) {
+            for (int h = 0; h < radius * 2; h++) {
+                int dx = radius - w;
+                int dy = radius - h;
+                if ((dx * dx + dy * dy) <= (radius * radius)) {
+                    SDL_RenderDrawPoint(renderer, center_x + dx, center_y + dy);
+                }
+            }
+        }
+    }
+
     if (render_bool) {
         SDL_RenderPresent(renderer);
     }
@@ -363,7 +388,7 @@ void bitboards_to_board(Piece pieces[], char board[8][8])
 
 void render_promotion_squares(SDL_Renderer *renderer, Square output_square,
                               Piece pieces[], int direction,
-                              char promotion_pieces[])
+                              char promotion_pieces[], GameState *game_state)
 {
     char board[8][8];
     Square fake_square = {-1, -1};
@@ -371,12 +396,13 @@ void render_promotion_squares(SDL_Renderer *renderer, Square output_square,
     uint64_t pos_mov = (uint64_t) 0;
     int render_bool = 0;
 
-    render_board(renderer, board, pieces, fake_square, pos_mov, render_bool);
+    render_board(renderer, board, pieces, fake_square, pos_mov, render_bool,
+                 game_state);
 
+    SDL_SetRenderDrawColor(renderer, 211, 211, 211, 255);
     for (int i = 0; i < 4; i++) {
         int row = (7 - output_square.row + (i * direction));
         int file = output_square.file;
-        SDL_SetRenderDrawColor(renderer, 211, 211, 211, 255);
         int center_x = file * SQUARE_SIZE + SQUARE_SIZE / 2;
         int center_y = row * SQUARE_SIZE + SQUARE_SIZE / 2;
         int radius = SQUARE_SIZE / 2;
@@ -577,7 +603,7 @@ int main()
             awaiting_promotion = 0;
 
             render_promotion_squares(renderer, selected_square, pieces,
-                                     direction, promotion_pieces);
+                                     direction, promotion_pieces, &game_state);
             needs_redraw = 0;
             promotion_rendered = 1;
         }
@@ -589,7 +615,7 @@ int main()
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
             render_board(renderer, board, pieces, selected_square, pos_mov,
-                         render_bool);
+                         render_bool, &game_state);
             needs_redraw = 0;
         }
         SDL_Delay(10);
