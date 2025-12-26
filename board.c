@@ -105,9 +105,8 @@ void unset_bit(uint64_t *piece_bb, int position)
     *piece_bb &= ~mask;
 }
 
-int is_check(Piece pieces[], GameState *game_state)
+int is_check(Piece pieces[], GameState *game_state, char color_moving)
 {
-    char color_moving = color_to_move(game_state);
     int king_index = color_moving == 'b' ? WHITE_KING_INDEX : BLACK_KING_INDEX;
     int king_position = get_lowest_bit_index(*(pieces[king_index].pos_bb));
 
@@ -134,24 +133,24 @@ int is_check(Piece pieces[], GameState *game_state)
 }
 
 void make_move(Square input_square, Square output_square, Piece pieces[],
-               GameState *game_state)
+               GameState *game_state, int update_state)
 {
     int old_pos = get_position(input_square.file, input_square.row);
     Piece *piece = find_piece_by_position(old_pos);
-    game_state->last_moved_piece = piece->symbol;
+
     int new_pos = get_position(output_square.file, output_square.row);
 
-    Piece *other_piece = find_piece_by_position(new_pos);
+    Piece *other_piece =
+        find_piece_by_position(new_pos);
+    char color_moving = color_to_move(game_state);
 
     if (game_state->play_en_passant) {
         int other_pawn_pos = new_pos;
-        char color_moving = color_to_move(game_state);
         if (color_moving == 'w') {
             other_pawn_pos = other_pawn_pos - 8;
         } else {
             other_pawn_pos = other_pawn_pos + 8;
         }
-        game_state->play_en_passant = 0;
         other_piece = find_piece_by_position(other_pawn_pos);
 
         if (!(other_piece == NULL)) {
@@ -167,13 +166,18 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
         unset_bit(piece->pos_bb, old_pos);
         if (game_state->promote_pawn) {
             piece = get_piece_bb(game_state->promote_to);
-            game_state->promote_pawn = 0;
-            game_state->promote_to = '0';
         }
         set_bit(piece->pos_bb, new_pos);
     }
-    game_state->is_check = is_check(pieces, game_state);
-    game_state->total_moves++;
+
+    if (update_state) {
+        game_state->promote_pawn = 0;
+        game_state->promote_to = '0';
+        game_state->play_en_passant = 0;
+        game_state->last_moved_piece = piece->symbol;
+        game_state->is_check = is_check(pieces, game_state, color_moving);
+        game_state->total_moves++;
+    }
 }
 
 const char *get_image_path(char symbol)
@@ -457,6 +461,32 @@ char get_promotion_piece(char color, int row)
     }
 }
 
+void validate_possible_moves_solve_check(uint64_t *pos_mov, Square input_square,
+                                         GameState *game_state)
+{
+    // This could be done by checking which piece attacks the king -> calculate
+    // which squares need to be blocked in order to fix check. Or take piece
+    // that sets king in check In case of double check always move the king
+    Piece *pieces = get_pieces();
+
+    int update_state = 0;
+    uint64_t copy_pos_mov = *pos_mov;
+    char color_moving = color_to_move(game_state) == 'w' ? 'b' : 'w';
+
+    while (copy_pos_mov) {
+        int next_position = get_lowest_bit_index(copy_pos_mov);
+        Square output_square = square_from_position(next_position);
+        make_move(input_square, output_square, pieces, game_state,
+            update_state);
+            
+        if (is_check(pieces, game_state, color_moving)) {
+            unset_bit(pos_mov, next_position);
+        }
+        make_move(output_square, input_square, pieces, game_state, update_state);
+        copy_pos_mov &= copy_pos_mov - 1;
+    }
+}
+
 int main()
 {
     GameState game_state = {0};
@@ -515,8 +545,9 @@ int main()
                     snprintf(game_state.last_move, sizeof(game_state.last_move),
                              "%s", last_move);
 
+                    int update_state = 1;
                     make_move(previous_square, selected_square, pieces,
-                              &game_state);
+                              &game_state, update_state);
                     selected_square = (Square) {-1, -1};
                     needs_redraw = 1;
                     promotion_rendered = 0;
@@ -569,9 +600,9 @@ int main()
                             snprintf(game_state.last_move,
                                      sizeof(game_state.last_move), "%s",
                                      last_move);
-
+                            int update_state = 1;
                             make_move(previous_square, selected_square, pieces,
-                                      &game_state);
+                                      &game_state, update_state);
                             selected_square = (Square) {-1, -1};
                         }
                         piece_selected = 0;
@@ -581,6 +612,10 @@ int main()
                         piece_selected = 1;
                         pos_mov = find_possible_moves(selected_square, position,
                                                       piece, &game_state);
+                        if (game_state.is_check) {
+                            validate_possible_moves_solve_check(
+                                &pos_mov, selected_square, &game_state);
+                        }
                         needs_redraw = 1;
                     } else {
                         piece_selected = 0;
