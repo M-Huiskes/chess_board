@@ -18,6 +18,7 @@ typedef struct {
     int promote_pawn;
     char promote_to;
     int is_check;
+    char last_captured_piece;
 } GameState;
 
 Square square_from_position(int position);

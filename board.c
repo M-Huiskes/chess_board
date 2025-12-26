@@ -140,8 +140,7 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
 
     int new_pos = get_position(output_square.file, output_square.row);
 
-    Piece *other_piece =
-        find_piece_by_position(new_pos);
+    Piece *other_piece = find_piece_by_position(new_pos);
     char color_moving = color_to_move(game_state);
 
     if (game_state->play_en_passant) {
@@ -155,12 +154,18 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
 
         if (!(other_piece == NULL)) {
             unset_bit(other_piece->pos_bb, other_pawn_pos);
+            if (!(update_state)) {
+                game_state->last_captured_piece = other_piece->symbol;
+            }
         }
         unset_bit(piece->pos_bb, old_pos);
         set_bit(piece->pos_bb, new_pos);
     } else {
         if (!(other_piece == NULL)) {
             unset_bit(other_piece->pos_bb, new_pos);
+            if (!(update_state)) {
+                game_state->last_captured_piece = other_piece->symbol;
+            }
         }
 
         unset_bit(piece->pos_bb, old_pos);
@@ -477,12 +482,24 @@ void validate_possible_moves_solve_check(uint64_t *pos_mov, Square input_square,
         int next_position = get_lowest_bit_index(copy_pos_mov);
         Square output_square = square_from_position(next_position);
         make_move(input_square, output_square, pieces, game_state,
-            update_state);
-            
+                  update_state);
+
         if (is_check(pieces, game_state, color_moving)) {
             unset_bit(pos_mov, next_position);
         }
-        make_move(output_square, input_square, pieces, game_state, update_state);
+        make_move(output_square, input_square, pieces, game_state,
+                  update_state);
+        if (game_state->last_captured_piece != '\0') {
+            int output_pos =
+                get_position(output_square.file, output_square.row);
+            for (int i = 0; i < 12; i++) {
+                if (pieces[i].symbol == game_state->last_captured_piece) {
+                    set_bit(pieces[i].pos_bb, output_pos);
+                    break;
+                }
+            }
+            game_state->last_captured_piece = '\0';
+        }
         copy_pos_mov &= copy_pos_mov - 1;
     }
 }
