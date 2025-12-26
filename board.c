@@ -105,14 +105,14 @@ void unset_bit(uint64_t *piece_bb, int position)
     *piece_bb &= ~mask;
 }
 
-void is_check(Piece pieces[], GameState *game_state)
+int is_check(Piece pieces[], GameState *game_state)
 {
     char color_moving = color_to_move(game_state);
-    int king_index = color_moving == 'w' ? WHITE_KING_INDEX : BLACK_KING_INDEX;
+    int king_index = color_moving == 'b' ? WHITE_KING_INDEX : BLACK_KING_INDEX;
     int king_position = get_lowest_bit_index(*(pieces[king_index].pos_bb));
 
     for (int i = 0; i < 12; i++) {
-        if (pieces[i].color != color_moving) {
+        if (pieces[i].color == color_moving) {
             uint64_t piece_bb = *(pieces[i].pos_bb);
             while (piece_bb) {
                 int position = get_lowest_bit_index(piece_bb);
@@ -123,17 +123,14 @@ void is_check(Piece pieces[], GameState *game_state)
                     uint64_t pos_mov = find_possible_moves(
                         input_square, position, piece, game_state);
                     if (is_bit_set(pos_mov, king_position)) {
-                        game_state->is_check = 1;
-                        break;
+                        return 1;
                     }
                 }
                 piece_bb &= piece_bb - 1;
             }
         }
-        if (game_state->is_check) {
-            break;
-        }
     }
+    return 0;
 }
 
 void make_move(Square input_square, Square output_square, Piece pieces[],
@@ -175,9 +172,8 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
         }
         set_bit(piece->pos_bb, new_pos);
     }
+    game_state->is_check = is_check(pieces, game_state);
     game_state->total_moves++;
-
-    is_check(pieces, game_state);
 }
 
 const char *get_image_path(char symbol)
