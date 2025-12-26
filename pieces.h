@@ -21,7 +21,7 @@ int calculate_possible_moves(int position);
 
 uint64_t get_full_board(void);
 
-uint64_t find_possible_moves(Square input_square, int position, Piece *piece,
+uint64_t find_possible_moves(Square input_square, Piece *piece,
                              GameState *game_state);
 
 Piece *find_piece_by_position(int position);

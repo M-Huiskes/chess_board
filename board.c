@@ -119,8 +119,8 @@ int is_check(Piece pieces[], GameState *game_state, char color_moving)
                 Piece *piece = find_piece_by_position(position);
 
                 if (piece != NULL) {
-                    uint64_t pos_mov = find_possible_moves(
-                        input_square, position, piece, game_state);
+                    uint64_t pos_mov =
+                        find_possible_moves(input_square, piece, game_state);
                     if (is_bit_set(pos_mov, king_position)) {
                         return 1;
                     }
@@ -504,6 +504,33 @@ void validate_possible_moves_solve_check(uint64_t *pos_mov, Square input_square,
     }
 }
 
+int is_game_ended(Piece pieces[], GameState *game_state)
+{
+    char color_moving = color_to_move(game_state);
+    for (int i = 0; i < 12; i++) {
+        if (pieces[i].color == color_moving) {
+            uint64_t piece_bb = *(pieces[i].pos_bb);
+            while (piece_bb) {
+                int position = get_lowest_bit_index(piece_bb);
+                Square selected_square = square_from_position(position);
+                Piece *piece = find_piece_by_position(position);
+
+                if (piece != NULL) {
+                    uint64_t pos_mov =
+                        find_possible_moves(selected_square, piece, game_state);
+                    validate_possible_moves_solve_check(
+                        &pos_mov, selected_square, game_state);
+                    if (!(pos_mov == 0)) {
+                        return 0;
+                    }
+                }
+                piece_bb &= piece_bb - 1;
+            }
+        }
+    }
+    return 1;
+}
+
 int main()
 {
     GameState game_state = {0};
@@ -627,8 +654,8 @@ int main()
                         needs_redraw = 1;
                     } else if (!(piece == NULL)) {
                         piece_selected = 1;
-                        pos_mov = find_possible_moves(selected_square, position,
-                                                      piece, &game_state);
+                        pos_mov = find_possible_moves(selected_square, piece,
+                                                      &game_state);
                         validate_possible_moves_solve_check(
                             &pos_mov, selected_square, &game_state);
                         needs_redraw = 1;
@@ -663,6 +690,17 @@ int main()
             render_board(renderer, board, pieces, selected_square, pos_mov,
                          render_bool, &game_state);
             needs_redraw = 0;
+        }
+
+        if (is_game_ended(pieces, &game_state)) {
+            if (game_state.is_check) {
+                char *winning_color =
+                    (color_to_move(&game_state) == 'w') ? "Black" : "White";
+                printf("%s won!!!\n", winning_color);
+            } else {
+                printf("Game ended in draw!!!\n");
+            }
+            running = 0;
         }
         SDL_Delay(10);
     }

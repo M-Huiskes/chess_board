@@ -358,9 +358,10 @@ uint64_t find_possible_king_moves(Piece *piece, int position,
     return possible_moves;
 }
 
-uint64_t find_possible_moves(Square input_square, int position, Piece *piece,
+uint64_t find_possible_moves(Square input_square, Piece *piece,
                              GameState *game_state)
 {
+    int position = get_position(input_square.file, input_square.row);
     uint64_t full_board = get_full_board();
     uint64_t possible_moves;
 

@@ -23,4 +23,6 @@ typedef struct {
 
 Square square_from_position(int position);
 
+int get_position(int file, int row);
+
 #endif
