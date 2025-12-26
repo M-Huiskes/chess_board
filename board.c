@@ -629,10 +629,8 @@ int main()
                         piece_selected = 1;
                         pos_mov = find_possible_moves(selected_square, position,
                                                       piece, &game_state);
-                        if (game_state.is_check) {
-                            validate_possible_moves_solve_check(
-                                &pos_mov, selected_square, &game_state);
-                        }
+                        validate_possible_moves_solve_check(
+                            &pos_mov, selected_square, &game_state);
                         needs_redraw = 1;
                     } else {
                         piece_selected = 0;
