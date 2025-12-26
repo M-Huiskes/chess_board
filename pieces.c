@@ -79,8 +79,7 @@ int is_enemy(Piece *piece, int position)
 // Deze functie generiek maken -> zie print_bitboard()
 Piece *find_piece_by_position(int position)
 {
-    if (position < 0 || position > 63)
-    {
+    if (position < 0 || position > 63) {
         return NULL;
     }
     Piece *pieces = get_pieces();

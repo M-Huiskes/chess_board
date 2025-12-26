@@ -1,6 +1,9 @@
 #ifndef PIECES_H
 #define PIECES_H
 
+#define WHITE_KING_INDEX 10
+#define BLACK_KING_INDEX 11
+
 #include "board.h"
 
 #include <stdint.h>
