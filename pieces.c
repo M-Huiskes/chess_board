@@ -346,9 +346,9 @@ uint64_t find_possible_knight_moves(Piece *piece, int position,
 }
 
 uint64_t find_possible_king_moves(Piece *piece, int position,
-                                  uint64_t full_board)
+                                  uint64_t full_board, GameState *game_state)
 {
-    // Implement castling
+    
     int max_counter = 1;
     uint64_t possible_moves = (uint64_t) 0;
     find_diagonal_moves(position, full_board, &possible_moves, piece,
@@ -391,7 +391,8 @@ uint64_t find_possible_moves(Square input_square, Piece *piece,
         break;
     case 'K':
     case 'k':
-        possible_moves = find_possible_king_moves(piece, position, full_board);
+        possible_moves =
+            find_possible_king_moves(piece, position, full_board, game_state);
         break;
     default:
         possible_moves = (uint64_t) 0;

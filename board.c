@@ -311,7 +311,7 @@ void render_board(SDL_Renderer *renderer, char board[8][8], Piece pieces[],
 
                 SDL_SetRenderDrawColor(renderer, 60, 80, 50, 180);
                 SDL_RenderFillRect(renderer, &rect);
-            } else if ((x + row) % 2 == 0)
+            } else if ((x + row) % 2 == 1)
                 SDL_SetRenderDrawColor(renderer, 240, 217, 181, 255);
             else
                 SDL_SetRenderDrawColor(renderer, 181, 136, 99, 255);
