@@ -27,8 +27,8 @@ typedef struct {
     int is_check;
     char last_captured_piece;
     char castle_played;
-    TeamState white_state;
-    TeamState black_state;
+    TeamState *white_state;
+    TeamState *black_state;
 } GameState;
 
 Square square_from_position(int position);

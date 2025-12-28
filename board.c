@@ -160,24 +160,24 @@ int get_rook_castle_position(char color_moving, char castle_type)
 }
 
 void make_move(Square input_square, Square output_square, Piece pieces[],
-               GameState *game_state, int update_state)
+               GameState *game_state, int update_state, int real_move)
 {
     int old_pos = get_position(input_square.file, input_square.row);
     Piece *piece = find_piece_by_position(old_pos);
     char color_moving = color_to_move(game_state);
     int new_pos = get_position(output_square.file, output_square.row);
     int castle_move = 0;
+    TeamState *team_state =
+        color_moving == 'w' ? game_state->white_state : game_state->black_state;
 
     if (piece->symbol == 'k' || piece->symbol == 'K') {
-        TeamState state = color_moving == 'w' ? game_state->white_state
-                                              : game_state->black_state;
         int short_castle = color_moving == 'w' ? WHITE_SHORT_CASTLE_POSITION
                                                : BLACK_SHORT_CASTLE_POSITION;
         int long_castle = color_moving == 'w' ? WHITE_LONG_CASTLE_POSITION
                                               : BLACK_LONG_CASTLE_POSITION;
 
-        if ((state.long_castle_allowed && new_pos == long_castle) ||
-            (state.short_castle_allowed && new_pos == short_castle)) {
+        if ((team_state->long_castle_allowed && new_pos == long_castle) ||
+            (team_state->short_castle_allowed && new_pos == short_castle)) {
             castle_move = 1;
             char castle_type = new_pos == long_castle ? 'l' : 's';
             int rook_index =
@@ -190,6 +190,9 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
 
             unset_bit(piece->pos_bb, old_pos);
             set_bit(piece->pos_bb, new_pos);
+
+            team_state->short_castle_allowed = 0;
+            team_state->long_castle_allowed = 0;
         }
     }
     if (!(castle_move)) {
@@ -226,6 +229,10 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
             }
             set_bit(piece->pos_bb, new_pos);
         }
+    }
+
+    if (real_move) {
+        if (piece)
     }
 
     if (update_state) {
@@ -533,27 +540,33 @@ void validate_possible_moves(uint64_t *pos_mov, Square input_square,
     int input_position = get_position(input_square.file, input_square.row);
     Piece *piece = find_piece_by_position(input_position);
 
+    TeamState *team_state =
+        piece->color == 'w' ? game_state->white_state : game_state->black_state;
+    int real_move = 0;
     while (copy_pos_mov) {
         int next_position = get_lowest_bit_index(copy_pos_mov);
-
         // For now don't make the move for castling
         if ((piece->symbol == 'k' || piece->symbol == 'K') &&
-            (next_position == WHITE_LONG_CASTLE_POSITION ||
-             next_position == WHITE_SHORT_CASTLE_POSITION ||
-             next_position == BLACK_LONG_CASTLE_POSITION ||
-             next_position == BLACK_SHORT_CASTLE_POSITION)) {
+            ((next_position == WHITE_LONG_CASTLE_POSITION &&
+              team_state->long_castle_allowed) ||
+             (next_position == WHITE_SHORT_CASTLE_POSITION &&
+              team_state->short_castle_allowed) ||
+             (next_position == BLACK_LONG_CASTLE_POSITION &&
+              team_state->long_castle_allowed) ||
+             (next_position == BLACK_SHORT_CASTLE_POSITION &&
+              team_state->short_castle_allowed))) {
             copy_pos_mov &= copy_pos_mov - 1;
             continue;
         }
         Square output_square = square_from_position(next_position);
-        make_move(input_square, output_square, pieces, game_state,
-                  update_state);
+        make_move(input_square, output_square, pieces, game_state, update_state,
+                  real_move);
 
         if (is_check(pieces, game_state, color_moving)) {
             unset_bit(pos_mov, next_position);
         }
-        make_move(output_square, input_square, pieces, game_state,
-                  update_state);
+        make_move(output_square, input_square, pieces, game_state, update_state,
+                  real_move);
         if (game_state->last_captured_piece != '\0') {
             int output_pos =
                 get_position(output_square.file, output_square.row);
@@ -602,8 +615,8 @@ int main()
     TeamState black_state = {1, 1};
     TeamState white_state = {1, 1};
 
-    game_state.black_state = black_state;
-    game_state.white_state = white_state;
+    game_state.black_state = &black_state;
+    game_state.white_state = &white_state;
     char board[8][8];
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -660,8 +673,9 @@ int main()
                              "%s", last_move);
 
                     int update_state = 1;
+                    int real_move = 1;
                     make_move(previous_square, selected_square, pieces,
-                              &game_state, update_state);
+                              &game_state, update_state, real_move);
                     selected_square = (Square) {-1, -1};
                     needs_redraw = 1;
                     promotion_rendered = 0;
@@ -715,8 +729,9 @@ int main()
                                      sizeof(game_state.last_move), "%s",
                                      last_move);
                             int update_state = 1;
+                            int real_move = 1;
                             make_move(previous_square, selected_square, pieces,
-                                      &game_state, update_state);
+                                      &game_state, update_state, real_move);
                             selected_square = (Square) {-1, -1};
                         }
                         piece_selected = 0;
