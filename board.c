@@ -534,6 +534,11 @@ int is_game_ended(Piece pieces[], GameState *game_state)
 int main()
 {
     GameState game_state = {0};
+    TeamState black_state = {1, 1};
+    TeamState white_state = {1, 1};
+
+    game_state.black_state = black_state;
+    game_state.white_state = white_state;
     char board[8][8];
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -690,17 +695,17 @@ int main()
             render_board(renderer, board, pieces, selected_square, pos_mov,
                          render_bool, &game_state);
             needs_redraw = 0;
-        }
 
-        if (is_game_ended(pieces, &game_state)) {
-            if (game_state.is_check) {
-                char *winning_color =
-                    (color_to_move(&game_state) == 'w') ? "Black" : "White";
-                printf("%s won!!!\n", winning_color);
-            } else {
-                printf("Game ended in draw!!!\n");
+            if (is_game_ended(pieces, &game_state)) {
+                if (game_state.is_check) {
+                    char *winning_color =
+                        (color_to_move(&game_state) == 'w') ? "Black" : "White";
+                    printf("%s won!!!\n", winning_color);
+                } else {
+                    printf("Game ended in draw!!!\n");
+                }
+                running = 0;
             }
-            running = 0;
         }
         SDL_Delay(10);
     }
