@@ -132,47 +132,100 @@ int is_check(Piece pieces[], GameState *game_state, char color_moving)
     return 0;
 }
 
+int get_rook_castle_position(char color_moving, char castle_type)
+{
+    switch (color_moving) {
+    case 'b':
+        switch (castle_type) {
+        case 's':
+            return BLACK_SHORT_ROOK_POSITION;
+            break;
+        case 'l':
+            return BLACK_LONG_ROOK_POSITION;
+            break;
+        }
+    case 'w':
+        switch (castle_type) {
+        case 's':
+            return WHITE_SHORT_ROOK_POSITION;
+            break;
+        case 'l':
+            return WHITE_LONG_ROOK_POSITION;
+            break;
+        }
+    default:
+        return -1;
+        break;
+    }
+}
+
 void make_move(Square input_square, Square output_square, Piece pieces[],
                GameState *game_state, int update_state)
 {
     int old_pos = get_position(input_square.file, input_square.row);
     Piece *piece = find_piece_by_position(old_pos);
-
-    int new_pos = get_position(output_square.file, output_square.row);
-
-    Piece *other_piece = find_piece_by_position(new_pos);
     char color_moving = color_to_move(game_state);
+    int new_pos = get_position(output_square.file, output_square.row);
+    int castle_move = 0;
 
-    if (game_state->play_en_passant) {
-        int other_pawn_pos = new_pos;
-        if (color_moving == 'w') {
-            other_pawn_pos = other_pawn_pos - 8;
+    if (piece->symbol == 'k' || piece->symbol == 'K') {
+        TeamState state = color_moving == 'w' ? game_state->white_state
+                                              : game_state->black_state;
+        int short_castle = color_moving == 'w' ? WHITE_SHORT_CASTLE_POSITION
+                                               : BLACK_SHORT_CASTLE_POSITION;
+        int long_castle = color_moving == 'w' ? WHITE_LONG_CASTLE_POSITION
+                                              : BLACK_LONG_CASTLE_POSITION;
+
+        if ((state.long_castle_allowed && new_pos == long_castle) ||
+            (state.short_castle_allowed && new_pos == short_castle)) {
+            castle_move = 1;
+            char castle_type = new_pos == long_castle ? 'l' : 's';
+            int rook_index =
+                get_rook_castle_position(color_moving, castle_type);
+            int direction = castle_type == 'l' ? 1 : -1;
+
+            Piece *rook = find_piece_by_position(rook_index);
+            unset_bit(rook->pos_bb, rook_index);
+            set_bit(rook->pos_bb, new_pos + direction);
+
+            unset_bit(piece->pos_bb, old_pos);
+            set_bit(piece->pos_bb, new_pos);
+        }
+    }
+    if (!(castle_move)) {
+        Piece *other_piece = find_piece_by_position(new_pos);
+
+        if (game_state->play_en_passant) {
+            int other_pawn_pos = new_pos;
+            if (color_moving == 'w') {
+                other_pawn_pos = other_pawn_pos - 8;
+            } else {
+                other_pawn_pos = other_pawn_pos + 8;
+            }
+            other_piece = find_piece_by_position(other_pawn_pos);
+
+            if (!(other_piece == NULL)) {
+                unset_bit(other_piece->pos_bb, other_pawn_pos);
+                if (!(update_state)) {
+                    game_state->last_captured_piece = other_piece->symbol;
+                }
+            }
+            unset_bit(piece->pos_bb, old_pos);
+            set_bit(piece->pos_bb, new_pos);
         } else {
-            other_pawn_pos = other_pawn_pos + 8;
-        }
-        other_piece = find_piece_by_position(other_pawn_pos);
-
-        if (!(other_piece == NULL)) {
-            unset_bit(other_piece->pos_bb, other_pawn_pos);
-            if (!(update_state)) {
-                game_state->last_captured_piece = other_piece->symbol;
+            if (!(other_piece == NULL)) {
+                unset_bit(other_piece->pos_bb, new_pos);
+                if (!(update_state)) {
+                    game_state->last_captured_piece = other_piece->symbol;
+                }
             }
-        }
-        unset_bit(piece->pos_bb, old_pos);
-        set_bit(piece->pos_bb, new_pos);
-    } else {
-        if (!(other_piece == NULL)) {
-            unset_bit(other_piece->pos_bb, new_pos);
-            if (!(update_state)) {
-                game_state->last_captured_piece = other_piece->symbol;
-            }
-        }
 
-        unset_bit(piece->pos_bb, old_pos);
-        if (game_state->promote_pawn) {
-            piece = get_piece_bb(game_state->promote_to);
+            unset_bit(piece->pos_bb, old_pos);
+            if (game_state->promote_pawn) {
+                piece = get_piece_bb(game_state->promote_to);
+            }
+            set_bit(piece->pos_bb, new_pos);
         }
-        set_bit(piece->pos_bb, new_pos);
     }
 
     if (update_state) {
@@ -466,8 +519,8 @@ char get_promotion_piece(char color, int row)
     }
 }
 
-void validate_possible_moves_solve_check(uint64_t *pos_mov, Square input_square,
-                                         GameState *game_state)
+void validate_possible_moves(uint64_t *pos_mov, Square input_square,
+                             GameState *game_state)
 {
     // This could be done by checking which piece attacks the king -> calculate
     // which squares need to be blocked in order to fix check. Or take piece
@@ -477,9 +530,21 @@ void validate_possible_moves_solve_check(uint64_t *pos_mov, Square input_square,
     int update_state = 0;
     uint64_t copy_pos_mov = *pos_mov;
     char color_moving = color_to_move(game_state) == 'w' ? 'b' : 'w';
+    int input_position = get_position(input_square.file, input_square.row);
+    Piece *piece = find_piece_by_position(input_position);
 
     while (copy_pos_mov) {
         int next_position = get_lowest_bit_index(copy_pos_mov);
+
+        // For now don't make the move for castling
+        if ((piece->symbol == 'k' || piece->symbol == 'K') &&
+            (next_position == WHITE_LONG_CASTLE_POSITION ||
+             next_position == WHITE_SHORT_CASTLE_POSITION ||
+             next_position == BLACK_LONG_CASTLE_POSITION ||
+             next_position == BLACK_SHORT_CASTLE_POSITION)) {
+            copy_pos_mov &= copy_pos_mov - 1;
+            continue;
+        }
         Square output_square = square_from_position(next_position);
         make_move(input_square, output_square, pieces, game_state,
                   update_state);
@@ -518,8 +583,8 @@ int is_game_ended(Piece pieces[], GameState *game_state)
                 if (piece != NULL) {
                     uint64_t pos_mov =
                         find_possible_moves(selected_square, piece, game_state);
-                    validate_possible_moves_solve_check(
-                        &pos_mov, selected_square, game_state);
+                    validate_possible_moves(&pos_mov, selected_square,
+                                            game_state);
                     if (!(pos_mov == 0)) {
                         return 0;
                     }
@@ -661,8 +726,8 @@ int main()
                         piece_selected = 1;
                         pos_mov = find_possible_moves(selected_square, piece,
                                                       &game_state);
-                        validate_possible_moves_solve_check(
-                            &pos_mov, selected_square, &game_state);
+                        validate_possible_moves(&pos_mov, selected_square,
+                                                &game_state);
                         needs_redraw = 1;
                     } else {
                         piece_selected = 0;

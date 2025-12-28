@@ -367,7 +367,7 @@ uint64_t find_possible_king_moves(Piece *piece, int position,
                                   uint64_t full_board, GameState *game_state)
 {
     char color_moving = piece->color;
-    TeamState status =
+    TeamState state =
         color_moving == 'w' ? game_state->white_state : game_state->black_state;
 
     int max_counter = 1;
@@ -379,7 +379,7 @@ uint64_t find_possible_king_moves(Piece *piece, int position,
 
     int king_index =
         color_moving == 'w' ? WHITE_KING_POSITION : BLACK_KING_POSITION;
-    if (status.short_castle_allowed) {
+    if (state.short_castle_allowed) {
         int castle_position = color_moving == 'w' ? WHITE_SHORT_CASTLE_POSITION
                                                   : BLACK_SHORT_CASTLE_POSITION;
         int rook_index = color_moving == 'w' ? WHITE_SHORT_ROOK_POSITION
@@ -389,7 +389,7 @@ uint64_t find_possible_king_moves(Piece *piece, int position,
         }
     }
 
-    if (status.long_castle_allowed) {
+    if (state.long_castle_allowed) {
         int castle_position = color_moving == 'w' ? WHITE_LONG_CASTLE_POSITION
                                                   : BLACK_LONG_CASTLE_POSITION;
         int rook_index = color_moving == 'w' ? WHITE_LONG_ROOK_POSITION

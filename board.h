@@ -26,6 +26,7 @@ typedef struct {
     char promote_to;
     int is_check;
     char last_captured_piece;
+    char castle_played;
     TeamState white_state;
     TeamState black_state;
 } GameState;
