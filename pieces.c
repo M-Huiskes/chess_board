@@ -345,6 +345,24 @@ uint64_t find_possible_knight_moves(Piece *piece, int position,
     return possible_moves;
 }
 
+int is_castle_possible(int rook_index, int king_index, uint64_t full_board)
+{
+    if (king_index > rook_index) {
+        for (int i = rook_index + 1; i < king_index; i++) {
+            if (is_bit_set(full_board, i)) {
+                return 0;
+            }
+        }
+    } else {
+        for (int i = king_index + 1; i < rook_index; i++) {
+            if (is_bit_set(full_board, i)) {
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
 uint64_t find_possible_king_moves(Piece *piece, int position,
                                   uint64_t full_board, GameState *game_state)
 {
@@ -359,18 +377,25 @@ uint64_t find_possible_king_moves(Piece *piece, int position,
     find_orthogonal_moves(position, full_board, &possible_moves, piece,
                           max_counter);
 
+    int king_index =
+        color_moving == 'w' ? WHITE_KING_POSITION : BLACK_KING_POSITION;
     if (status.short_castle_allowed) {
-        int castle_position = color_moving == 'w' ? WHITE_SHORT_CASTLE_INDEX
-                                                  : BLACK_SHORT_CASTLE_INDEX;
-        if (!(is_bit_set(full_board, castle_position))) {
+        int castle_position = color_moving == 'w' ? WHITE_SHORT_CASTLE_POSITION
+                                                  : BLACK_SHORT_CASTLE_POSITION;
+        int rook_index = color_moving == 'w' ? WHITE_SHORT_ROOK_POSITION
+                                             : BLACK_SHORT_ROOK_POSITION;
+        if (is_castle_possible(rook_index, king_index, full_board)) {
             set_bit(&possible_moves, castle_position);
         }
     }
 
     if (status.long_castle_allowed) {
-        int castle_position = color_moving == 'w' ? WHITE_LONG_CASTLE_INDEX
-                                                  : BLACK_LONG_CASTLE_INDEX;
-        if (!(is_bit_set(full_board, castle_position))) {
+        int castle_position = color_moving == 'w' ? WHITE_LONG_CASTLE_POSITION
+                                                  : BLACK_LONG_CASTLE_POSITION;
+        int rook_index = color_moving == 'w' ? WHITE_LONG_ROOK_POSITION
+                                             : BLACK_LONG_ROOK_POSITION;
+
+        if (is_castle_possible(rook_index, king_index, full_board)) {
             set_bit(&possible_moves, castle_position);
         }
     }
