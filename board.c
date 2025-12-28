@@ -164,7 +164,7 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
 {
     int old_pos = get_position(input_square.file, input_square.row);
     Piece *piece = find_piece_by_position(old_pos);
-    char color_moving = color_to_move(game_state);
+    char color_moving = piece->color;
     int new_pos = get_position(output_square.file, output_square.row);
     int castle_move = 0;
     TeamState *team_state =
@@ -232,7 +232,25 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
     }
 
     if (real_move) {
-        if (piece)
+        char rook_symbol = color_moving == 'w' ? 'R' : 'r';
+        int short_castle = color_moving == 'w' ? WHITE_SHORT_ROOK_POSITION
+                                               : BLACK_SHORT_ROOK_POSITION;
+        int long_castle = color_moving == 'w' ? WHITE_LONG_ROOK_POSITION
+                                              : BLACK_LONG_ROOK_POSITION;
+        if ((piece->symbol == rook_symbol) &&
+            (old_pos == short_castle || old_pos == long_castle)) {
+            if (team_state->long_castle_allowed && old_pos == long_castle) {
+                team_state->long_castle_allowed = 0;
+            }
+            if (team_state->short_castle_allowed && old_pos == short_castle) {
+                team_state->short_castle_allowed = 0;
+            }
+        }
+
+        if ((piece->symbol == 'k' || piece->symbol == 'K')){
+            team_state->long_castle_allowed = 0;
+            team_state->short_castle_allowed = 0;
+        }
     }
 
     if (update_state) {
