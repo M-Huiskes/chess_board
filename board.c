@@ -108,7 +108,17 @@ void unset_bit(uint64_t *piece_bb, int position)
 int is_check(Piece pieces[], GameState *game_state, char color_moving)
 {
     int king_index = color_moving == 'b' ? WHITE_KING_INDEX : BLACK_KING_INDEX;
+    TeamState *team_state =
+        color_moving == 'b' ? game_state->white_state : game_state->black_state;
     int king_position = get_lowest_bit_index(*(pieces[king_index].pos_bb));
+
+    int default_king_position =
+        color_moving == 'b' ? WHITE_KING_POSITION : BLACK_KING_POSITION;
+    int castle_directions[4] = {-2, -1, 1, 2};
+
+    int short_castle_allowed = 1;
+    int long_castle_allowed = 1;
+    int is_check = 0;
 
     for (int i = 0; i < 12; i++) {
         if (pieces[i].color == color_moving) {
@@ -121,15 +131,29 @@ int is_check(Piece pieces[], GameState *game_state, char color_moving)
                 if (piece != NULL) {
                     uint64_t pos_mov =
                         find_possible_moves(input_square, piece, game_state);
-                    if (is_bit_set(pos_mov, king_position)) {
-                        return 1;
+                    if (is_bit_set(pos_mov, king_position) && !(is_check)) {
+                        is_check = 1;
+                    }
+                    for (int i = 0; i < 4; i++) {
+                        int direction = castle_directions[i];
+                        if (is_bit_set(pos_mov,
+                                       default_king_position + direction)) {
+                            if (direction > 0) {
+                                short_castle_allowed = 0;
+                            } else {
+                                long_castle_allowed = 0;
+                            }
+                        }
                     }
                 }
                 piece_bb &= piece_bb - 1;
             }
         }
     }
-    return 0;
+    team_state->long_castle_allowed = long_castle_allowed;
+    team_state->short_castle_allowed = short_castle_allowed;
+
+    return is_check;
 }
 
 int get_rook_castle_position(char color_moving, char castle_type)
@@ -247,7 +271,7 @@ void make_move(Square input_square, Square output_square, Piece pieces[],
             }
         }
 
-        if ((piece->symbol == 'k' || piece->symbol == 'K')){
+        if ((piece->symbol == 'k' || piece->symbol == 'K')) {
             team_state->long_castle_allowed = 0;
             team_state->short_castle_allowed = 0;
         }
