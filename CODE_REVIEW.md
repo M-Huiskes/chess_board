@@ -852,3 +852,33 @@ Your code is readable and mostly well-structured. The main areas for improvement
 With these improvements, you'll have a solid foundation for building a chess engine with search algorithms like minimax or alpha-beta pruning.
 
 Keep up the excellent work! 🎉
+
+---
+
+## Overall Score: 7.0/10
+
+### Score Breakdown & Justification
+
+**Starting from a base of 10 points:**
+
+**Deductions:**
+- ❌ **Architecture/design flaws** (-1.0 pt): Global mutable state and tight coupling between UI and game logic
+- ❌ **No error handling** (-1.0 pt): Missing NULL checks and validation that could cause crashes in production
+- ❌ **No testing** (-1.0 pt): Complete absence of unit tests, integration tests, or perft validation
+
+**Total: 10.0 - 3.0 = 7.0/10**
+
+**What kept the score strong:**
+- ✅ **Complete, correct implementation**: All chess rules properly implemented including complex edge cases (en passant, castling, pawn promotion, check/checkmate)
+- ✅ **Advanced techniques**: Bitboard representation demonstrates research into domain-appropriate optimization
+- ✅ **Functionality**: The program works end-to-end with proper visualization and user interaction
+- ✅ **Code quality**: Consistent style, reasonable organization, and mostly clean function design
+- ✅ **Complexity**: Successfully handled a non-trivial problem domain with many interacting rules
+
+**Minor issues that didn't warrant full deductions:**
+- Documentation gaps (comments are sparse but code is readable)
+- Some inefficient algorithms (won't matter for human play, only for engine development)
+- Magic numbers and minor style issues (easy fixes, don't affect functionality)
+
+### Context
+This score reflects expectations for an upper-level computer science student (junior/senior year) completing a significant course project. The implementation demonstrates solid programming fundamentals and problem-solving ability, but lacks the defensive programming and testing discipline expected at this level. For a first C project specifically, this would rate higher (~8/10), but holding to general CS student standards, the three major deductions (architecture, error handling, testing) represent gaps in professional software engineering practices. That said, 7/10 is a solid B grade—the project is functional, demonstrates competence, and shows clear understanding of the problem domain.
