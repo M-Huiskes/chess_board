@@ -694,6 +694,7 @@ int main()
     int piece_selected = 0;
     int promotion_rendered = 0;
     uint64_t pos_mov = (uint64_t) 0;
+    char computer_color = 'b';
 
     while (running) {
         while (SDL_PollEvent(&event)) {
