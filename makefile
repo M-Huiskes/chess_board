@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -I/usr/include/SDL2
-LDFLAGS = -lSDL2 -lSDL2_image
+CFLAGS  = -Wall $(shell pkg-config --cflags sdl2)
+LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image)
 
 SRC = board.c pieces.c
 OBJ = $(SRC:.c=.o)
