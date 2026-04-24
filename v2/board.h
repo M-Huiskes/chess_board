@@ -6,9 +6,14 @@
 typedef struct {
     Piece white[6];
     Piece black[6];
+    Piece *selected_piece;
 } BoardState;
 
-void print_bitboard(uint64_t bitboard);
-uint64_t get_full_board(BoardState board);
+typedef struct {
+    int row;
+    int file;
+} Square;
+
+uint64_t get_full_bit_board(BoardState board);
 
 #endif

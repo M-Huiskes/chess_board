@@ -1,5 +1,6 @@
 #include "board.h"
 #include "pieces.h"
+#include "terminal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -46,12 +47,8 @@ int main(int argc, char *argv[])
 
     BoardState board = init_board();
 
-    uint64_t full_board = get_full_board(board);
-    print_bitboard(full_board);
-
     if (strcmp(argv[1], "terminal") == 0) {
-        // start terminal-based game
-        printf("Starting terminal mode...\n");
+        play_terminal_game(board);
     } else if (strcmp(argv[1], "ui") == 0) {
         // start SDL2 UI-based game
         printf("Starting UI mode...\n");
