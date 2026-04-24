@@ -6,12 +6,11 @@
 typedef struct {
     Piece white[6];
     Piece black[6];
-    Piece *selected_piece;
 } BoardState;
 
 typedef struct {
-    int row;
     int file;
+    int row;
 } Square;
 
 uint64_t get_full_bit_board(BoardState board);

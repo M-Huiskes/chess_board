@@ -1,6 +1,7 @@
 #include "board.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static void print_bitboard(uint64_t bitboard)
 {
@@ -56,11 +57,16 @@ static void print_board_from_bitboards(BoardState board)
     printf("   abcdefgh\n");
 }
 
-Square get_square_by_user_input()
+Square get_square_by_user_input(int first_call)
 {
     char input[64];
 
-    printf("Enter a square (e.g. e4): ");
+    if (first_call){
+        printf("Select a piece by entering a square (e.g. e4): ");
+    } else {
+        printf("Select the output square (e.g. e4): ");
+    }
+
     fgets(input, sizeof(input), stdin);
 
     if (strlen(input) < 2 || input[0] < 'a' || input[0] > 'h' ||
@@ -69,12 +75,12 @@ Square get_square_by_user_input()
         return (Square){-1, -1};
     }
 
-    char file = input[0];
-    int row = input[1] - '0';
-    
-    Square selected_sq = (Square){row, file};
+    int file = input[0] - 'a';
+    int row = input[1] - '0' - 1;
 
-    printf("Selected square: %d %d \n", row, file);
+    Square selected_sq = (Square){file, row};
+
+    printf("Selected file: %d, row %d \n", file, row);
     return selected_sq;
 }
 
@@ -84,11 +90,8 @@ void play_terminal_game(BoardState board)
     int needs_redraw = 1;
 
     while (running) {
-        if (needs_redraw) {
-            print_board_from_bitboards(board);
-            needs_redraw = 0;
-        }
-
-        Square input_sq = get_square_by_user_input();
+        print_board_from_bitboards(board);
+        Square input_sq = get_square_by_user_input(1);
+        Square output_sq = get_square_by_user_input(0);
     }
 }
