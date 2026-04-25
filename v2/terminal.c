@@ -34,7 +34,7 @@ static void print_board_from_bitboards(BoardState board)
 
             for (int i = 0; i < 12; i++) {
                 Piece *piece = get_piece_by_index(i, &board);
-                uint64_t piece_bb = *(piece->pos_bb);
+                uint64_t piece_bb = piece->pos_bb;
 
                 if (piece_bb & mask) {
                     printf("%c", piece->symbol);
@@ -64,12 +64,18 @@ static Square get_square_by_user_input(int first_call)
     }
 
     fgets(input, sizeof(input), stdin);
+    
+    if (strlen(input) > 2 && input[2] != '\n' && input[2] != '\0' ) {
+        printf("Too many input characters, only type two (e.g. e4)\n");
+        return get_square_by_user_input(first_call);
+    }
 
     if (strlen(input) < 2 || input[0] < 'a' || input[0] > 'h' ||
         input[1] < '1' || input[1] > '8') {
         printf("Invalid square.\n");
         return get_square_by_user_input(first_call);
     }
+
 
     int file = input[0] - 'a';
     int row = input[1] - '0' - 1;

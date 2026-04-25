@@ -4,8 +4,15 @@
 #include "pieces.h"
 
 typedef struct {
-    Piece white[6];
-    Piece black[6];
+    Piece pieces[6];
+    uint64_t attack_map;
+    int short_castle_allowed;
+    int long_castle_allowed;
+} TeamState;
+
+typedef struct {
+    TeamState white;
+    TeamState black;
 } BoardState;
 
 typedef struct {
@@ -16,5 +23,6 @@ typedef struct {
 uint64_t get_full_bit_board(BoardState board);
 Piece *get_piece_by_index(int index, BoardState *board);
 Piece *get_piece_by_square(Square input_square, BoardState board);
+BoardState init_board(void);
 
 #endif
