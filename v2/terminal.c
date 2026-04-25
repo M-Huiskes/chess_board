@@ -31,17 +31,13 @@ static void print_board_from_bitboards(BoardState board)
             int piece_on_square = 0;
 
             uint64_t mask = (uint64_t) 1 << square;
-            Piece piece;
 
             for (int i = 0; i < 12; i++) {
-                if (i < 6) {
-                    piece = board.white[i];
-                } else {
-                    piece = board.black[i - 6];
-                }
-                uint64_t piece_bb = *(piece.pos_bb);
+                Piece *piece = get_piece_by_index(i, &board);
+                uint64_t piece_bb = *(piece->pos_bb);
+
                 if (piece_bb & mask) {
-                    printf("%c", piece.symbol);
+                    printf("%c", piece->symbol);
                     piece_on_square = 1;
                     break;
                 }
@@ -57,11 +53,11 @@ static void print_board_from_bitboards(BoardState board)
     printf("   abcdefgh\n");
 }
 
-Square get_square_by_user_input(int first_call)
+static Square get_square_by_user_input(int first_call)
 {
     char input[64];
 
-    if (first_call){
+    if (first_call) {
         printf("Select a piece by entering a square (e.g. e4): ");
     } else {
         printf("Select the output square (e.g. e4): ");
@@ -72,7 +68,7 @@ Square get_square_by_user_input(int first_call)
     if (strlen(input) < 2 || input[0] < 'a' || input[0] > 'h' ||
         input[1] < '1' || input[1] > '8') {
         printf("Invalid square.\n");
-        return (Square){-1, -1};
+        return get_square_by_user_input(first_call);
     }
 
     int file = input[0] - 'a';
@@ -84,6 +80,20 @@ Square get_square_by_user_input(int first_call)
     return selected_sq;
 }
 
+Piece *get_input_piece(BoardState board)
+{
+    Square input_sq = get_square_by_user_input(1);
+    Piece *input_piece = get_piece_by_square(input_sq, board);
+
+    if (input_piece == NULL) {
+        printf("Not a piece on this position, try again\n");
+        return get_input_piece(board);
+    }
+
+    printf("You selected %c \n", input_piece->symbol);
+    return input_piece;
+}
+
 void play_terminal_game(BoardState board)
 {
     int running = 1;
@@ -91,7 +101,8 @@ void play_terminal_game(BoardState board)
 
     while (running) {
         print_board_from_bitboards(board);
-        Square input_sq = get_square_by_user_input(1);
-        Square output_sq = get_square_by_user_input(0);
+
+        Piece *input_piece = get_input_piece(board);
+        // Square output_sq = get_square_by_user_input(0);
     }
 }
