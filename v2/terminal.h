@@ -3,6 +3,6 @@
 
 #include "board.h"
 
-void play_terminal_game(BoardState board);
+void play_terminal_game(BoardState *board);
 
 #endif TERMINAL_H

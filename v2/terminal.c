@@ -22,7 +22,7 @@ static void print_bitboard(uint64_t bitboard)
     printf("   abcdefgh\n");
 }
 
-static void print_board_from_bitboards(BoardState board)
+static void print_board_from_bitboards(BoardState *board)
 {
     for (int row = 7; row >= 0; row--) {
         printf("%d |", row + 1);
@@ -33,7 +33,7 @@ static void print_board_from_bitboards(BoardState board)
             uint64_t mask = (uint64_t) 1 << square;
 
             for (int i = 0; i < 12; i++) {
-                Piece *piece = get_piece_by_index(i, &board);
+                Piece *piece = get_piece_by_index(i, board);
                 uint64_t piece_bb = piece->pos_bb;
 
                 if (piece_bb & mask) {
@@ -86,10 +86,10 @@ static Square get_square_by_user_input(int first_call)
     return selected_sq;
 }
 
-Piece *get_input_piece(BoardState board)
+Piece *get_input_piece(BoardState *board)
 {
     Square input_sq = get_square_by_user_input(1);
-    Piece *input_piece = get_piece_by_square(input_sq, board);
+    Piece *input_piece = get_piece_by_square(&input_sq, board);
 
     if (input_piece == NULL) {
         printf("Not a piece on this position, try again\n");
@@ -100,7 +100,7 @@ Piece *get_input_piece(BoardState board)
     return input_piece;
 }
 
-void play_terminal_game(BoardState board)
+void play_terminal_game(BoardState *board)
 {
     int running = 1;
     int needs_redraw = 1;

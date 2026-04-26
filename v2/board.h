@@ -20,9 +20,9 @@ typedef struct {
     int row;
 } Square;
 
-uint64_t get_full_bit_board(BoardState board);
+uint64_t get_full_bit_board(BoardState *board);
 Piece *get_piece_by_index(int index, BoardState *board);
-Piece *get_piece_by_square(Square input_square, BoardState board);
+Piece *get_piece_by_square(Square *input_square, BoardState *board);
 BoardState init_board(void);
 
 #endif

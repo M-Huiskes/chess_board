@@ -17,8 +17,6 @@ const uint64_t START_BLACK_QUEEN = 0x0800000000000000ULL;
 const uint64_t START_WHITE_KING = 0x0000000000000010ULL;
 const uint64_t START_BLACK_KING = 0x1000000000000000ULL;
 
-// uint64_t find_possible_moves(Piece *piece, BoardState board) {}
-
 void init_pieces(Piece team[6], char color)
 {
     uint64_t start_positions[] = {
