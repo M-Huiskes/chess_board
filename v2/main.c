@@ -1,5 +1,4 @@
-#include "board.h"
-#include "pieces.h"
+#include "state.h"
 #include "terminal.h"
 
 #include <stdio.h>
@@ -12,7 +11,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    BoardState board = init_board();
+    GameState board = init_game_state();
 
     if (strcmp(argv[1], "terminal") == 0) {
         play_terminal_game(&board);

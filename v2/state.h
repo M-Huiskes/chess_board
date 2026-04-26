@@ -10,4 +10,6 @@ typedef struct {
     int bit_position;
 } GameState;
 
+GameState init_game_state();
+
 #endif

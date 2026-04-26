@@ -1,4 +1,5 @@
 #include "board.h"
+#include "state.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -64,8 +65,8 @@ static Square get_square_by_user_input(int first_call)
     }
 
     fgets(input, sizeof(input), stdin);
-    
-    if (strlen(input) > 2 && input[2] != '\n' && input[2] != '\0' ) {
+
+    if (strlen(input) > 2 && input[2] != '\n' && input[2] != '\0') {
         printf("Too many input characters, only type two (e.g. e4)\n");
         return get_square_by_user_input(first_call);
     }
@@ -75,7 +76,6 @@ static Square get_square_by_user_input(int first_call)
         printf("Invalid square.\n");
         return get_square_by_user_input(first_call);
     }
-
 
     int file = input[0] - 'a';
     int row = input[1] - '0' - 1;
@@ -100,15 +100,15 @@ Piece *get_input_piece(BoardState *board)
     return input_piece;
 }
 
-void play_terminal_game(BoardState *board)
+void play_terminal_game(GameState *game_state)
 {
     int running = 1;
     int needs_redraw = 1;
 
     while (running) {
-        print_board_from_bitboards(board);
+        print_board_from_bitboards(&(game_state->board));
 
-        Piece *input_piece = get_input_piece(board);
+        Piece *input_piece = get_input_piece(&(game_state->board));
         // Square output_sq = get_square_by_user_input(0);
     }
 }

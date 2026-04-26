@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS  = -Wall $(shell pkg-config --cflags sdl2)
 LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image)
 
-SRC = main.c board.c pieces.c terminal.c
+SRC = main.c board.c pieces.c terminal.c state.c
 OBJ = $(SRC:.c=.o)
 EXEC = chess
 
