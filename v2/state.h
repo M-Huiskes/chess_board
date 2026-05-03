@@ -38,6 +38,7 @@ typedef struct GameState {
     int en_passant_possible;
     char promote_to;
     int output_position;
+    uint64_t possible_moves;
 } GameState;
 
 GameState init_game_state();

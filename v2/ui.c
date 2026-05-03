@@ -1,6 +1,7 @@
 #include "ui.h"
 
 #include "board.h"
+#include "pieces.h"
 #include "state.h"
 
 #include <SDL2/SDL.h>
@@ -45,6 +46,7 @@ void static process_user_input(SDL_Event event, GameState *game_state)
         game_state->selected_square = (Square){-1, -1};
         game_state->selected_piece = NULL;
         game_state->bit_position = -1;
+        game_state->possible_moves = (uint64_t) 0;
 
         return;
     }
@@ -126,8 +128,86 @@ void static render_piece(char symbol, SDL_Renderer *renderer, int file, int row)
     }
 }
 
-void static render_board(SDL_Renderer *renderer, GameState *game_state,
-                         uint64_t possible_moves)
+void static draw_possible_moves(SDL_Renderer *renderer, char board[8][8],
+                                uint64_t pos_mov)
+{
+    printf("running draw possible moves!!\n");
+    for (int rank = 7; rank >= 0; rank--) {
+        for (int file = 0; file < 8; file++) {
+            int sq = rank * 8 + file;
+            uint64_t mask = (uint64_t) 1 << sq;
+            if (pos_mov & mask) {
+                // Enable alpha blending
+                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+                // Set semi-transparent dark army green color (R, G, B, Alpha)
+                SDL_SetRenderDrawColor(renderer, 60, 80, 50, 180);
+
+                // Check if square has a piece (capture move)
+                if (board[rank][file] != 0) {
+                    // Draw triangles in corners
+                    int corner_size = SQUARE_SIZE / 5;
+                    int x = file * SQUARE_SIZE;
+                    int y = (7 - rank) * SQUARE_SIZE;
+
+                    // Top-left triangle (corner at top-left, legs going right
+                    // and down)
+                    for (int i = 0; i < corner_size; i++) {
+                        for (int j = 0; j < corner_size - i; j++) {
+                            SDL_RenderDrawPoint(renderer, x + j, y + i);
+                        }
+                    }
+
+                    // Top-right triangle (corner at top-right, legs going left
+                    // and down)
+                    for (int i = 0; i < corner_size; i++) {
+                        for (int j = 0; j < corner_size - i; j++) {
+                            SDL_RenderDrawPoint(renderer,
+                                                x + SQUARE_SIZE - 1 - j, y + i);
+                        }
+                    }
+
+                    // Bottom-left triangle (corner at bottom-left, legs going
+                    // right and up)
+                    for (int i = 0; i < corner_size; i++) {
+                        for (int j = 0; j < corner_size - i; j++) {
+                            SDL_RenderDrawPoint(renderer, x + j,
+                                                y + SQUARE_SIZE - 1 - i);
+                        }
+                    }
+
+                    // Bottom-right triangle (corner at bottom-right, legs going
+                    // left and up)
+                    for (int i = 0; i < corner_size; i++) {
+                        for (int j = 0; j < corner_size - i; j++) {
+                            SDL_RenderDrawPoint(renderer,
+                                                x + SQUARE_SIZE - 1 - j,
+                                                y + SQUARE_SIZE - 1 - i);
+                        }
+                    }
+                } else {
+                    // Draw circle in center for empty squares
+                    int center_x = file * SQUARE_SIZE + SQUARE_SIZE / 2;
+                    int center_y = (7 - rank) * SQUARE_SIZE + SQUARE_SIZE / 2;
+                    int radius = SQUARE_SIZE / 6;
+
+                    for (int w = 0; w < radius * 2; w++) {
+                        for (int h = 0; h < radius * 2; h++) {
+                            int dx = radius - w;
+                            int dy = radius - h;
+                            if ((dx * dx + dy * dy) <= (radius * radius)) {
+                                SDL_RenderDrawPoint(renderer, center_x + dx,
+                                                    center_y + dy);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void static render_board(SDL_Renderer *renderer, GameState *game_state)
 {
     char board_repr[8][8];
     bitboards_to_board(board_repr, &(game_state->board));
@@ -153,6 +233,9 @@ void static render_board(SDL_Renderer *renderer, GameState *game_state,
             }
         }
     }
+    if (game_state->possible_moves != 0) {
+        draw_possible_moves(renderer, board_repr, game_state->possible_moves);
+    }
     SDL_RenderPresent(renderer);
 }
 
@@ -160,7 +243,6 @@ void play_ui_game(GameState *game_state)
 {
     int running = 1;
     int redraw_board = 1;
-    uint64_t possible_moves = (uint64_t) 0;
 
     SDL_Renderer *renderer = get_window_renderer();
     SDL_Event event;
@@ -177,10 +259,10 @@ void play_ui_game(GameState *game_state)
         }
 
         if (redraw_board) {
-            printf("Selected square row: %d, file: %d\n",
-                   game_state->selected_square.row,
-                   game_state->selected_square.file);
-            render_board(renderer, game_state, possible_moves);
+            if (game_state->selected_piece != NULL) {
+                game_state->possible_moves = find_possible_moves(game_state);
+            }
+            render_board(renderer, game_state);
             redraw_board = 0;
         }
     }
