@@ -1,5 +1,6 @@
 #include "ui.h"
 
+#include "bit_utils.h"
 #include "board.h"
 #include "pieces.h"
 #include "state.h"
@@ -63,7 +64,9 @@ void static process_user_input(SDL_Event event, GameState *game_state)
     Piece *selected_piece =
         get_piece_by_square(&selected_sq, &(game_state->board));
 
-    if (selected_piece == NULL || selected_piece->color != color_playing) {
+    if ((selected_piece == NULL &&
+         !(is_bit_set(game_state->possible_moves, position))) ||
+        selected_piece->color != color_playing) {
         set_default_square(game_state);
         return;
     }
