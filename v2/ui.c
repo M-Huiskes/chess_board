@@ -134,17 +134,22 @@ void static render_board(SDL_Renderer *renderer, GameState *game_state,
 
     for (int row = 7; row >= 0; row--) {
         for (int file = 0; file < 8; file++) {
-            SDL_Rect rect = {file * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE,
-                             SQUARE_SIZE};
-            if ((row + file) % 2 == 0) {
+            int render_row = 7 - row; // flip for SDL coordinate system
+            SDL_Rect rect = {file * SQUARE_SIZE, render_row * SQUARE_SIZE,
+                             SQUARE_SIZE, SQUARE_SIZE};
+            if (game_state->selected_square.file == file &&
+                game_state->selected_square.row == row &&
+                game_state->selected_piece != NULL) {
+                SDL_SetRenderDrawColor(renderer, 60, 80, 50, 180);
+            } else if ((row + file) % 2 == 1) {
                 SDL_SetRenderDrawColor(renderer, 240, 217, 181, 255);
             } else {
                 SDL_SetRenderDrawColor(renderer, 181, 136, 99, 255);
             }
             SDL_RenderFillRect(renderer, &rect);
 
-            if (board_repr[row][file] != 0) {
-                render_piece(board_repr[row][file], renderer, file, row);
+            if (board_repr[render_row][file] != 0) {
+                render_piece(board_repr[row][file], renderer, file, render_row);
             }
         }
     }
