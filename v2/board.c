@@ -1,7 +1,7 @@
 #include "board.h"
 
-#include "pieces.h"
 #include "bit_utils.h"
+#include "pieces.h"
 #include "state.h"
 
 #include <stdint.h>
@@ -73,15 +73,29 @@ BoardState init_board(void)
     return board;
 }
 
-void make_move(GameState *game_state, int output_position){
+void make_move(GameState *game_state, int output_position)
+{
     int input_position = game_state->bit_position;
+    int move_type = QUIET;
 
-    Piece *other_piece = get_piece_by_position(output_position, &(game_state->board));
-    if (!(other_piece == NULL)){
+    Piece *other_piece =
+        get_piece_by_position(output_position, &(game_state->board));
+    if (!(other_piece == NULL)) {
         unset_bit(&(other_piece->pos_bb), output_position);
+        move_type = CAPTURE;
     }
     printf("Selected piece symbol %c\n", game_state->selected_piece->symbol);
 
     unset_bit(&(game_state->selected_piece->pos_bb), input_position);
     set_bit(&(game_state->selected_piece->pos_bb), output_position);
+
+    push_move(&(game_state->move_history),
+              encode_move(input_position, output_position, move_type));
+
+    uint16_t last_move =
+        game_state->move_history.moves[game_state->move_history.count-1];
+    
+    printf("Last move: from %d, to %d, flags %d\n", get_from(last_move),
+           get_to(last_move), get_flags(last_move));
+    printf("Number of moves: %d\n", game_state->move_history.count);
 }

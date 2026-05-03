@@ -37,5 +37,10 @@ typedef struct GameState {
 } GameState;
 
 GameState init_game_state();
+uint16_t encode_move(int from, int to, int flags);
+int get_from(uint16_t move);
+int get_to(uint16_t move);
+int get_flags(uint16_t move);
+void push_move(MoveHistory *history, uint16_t move);
 
 #endif
