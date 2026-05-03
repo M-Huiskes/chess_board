@@ -1,6 +1,8 @@
 #include "board.h"
 
 #include "pieces.h"
+#include "bit_utils.h"
+#include "state.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -69,4 +71,8 @@ BoardState init_board(void)
     init_team_state(&(board.black), 'b');
 
     return board;
+}
+
+void make_move(GameState game_state){
+
 }

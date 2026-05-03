@@ -1,3 +1,4 @@
+#include "bit_utils.h"
 #include "board.h"
 #include "state.h"
 
@@ -107,18 +108,30 @@ void get_input_piece(GameState *game_state)
     game_state->selected_square = input_sq;
 }
 
+Square get_user_output_square(uint64_t possible_moves)
+{
+    Square output_sq = get_square_by_user_input(0);
+    int output_position = position_from_square(&output_sq);
+
+    if (!(is_bit_set(possible_moves, output_position))) {
+        printf("Not a viable move, try again\n");
+        return get_user_output_square(possible_moves);
+    }
+
+    return output_sq;
+}
+
 void play_terminal_game(GameState *game_state)
 {
     int running = 1;
     int needs_redraw = 1;
     uint64_t possible_moves = (uint64_t) 0;
+    print_board_from_bitboards(&(game_state->board), possible_moves);
 
     while (running) {
-        print_board_from_bitboards(&(game_state->board), possible_moves);
-
         get_input_piece(game_state);
         possible_moves = find_possible_moves(game_state);
-        print_bitboard(possible_moves);
-        // Square output_sq = get_square_by_user_input(0);
+        print_board_from_bitboards(&(game_state->board), possible_moves);
+        Square output_sq = get_user_output_square(possible_moves);
     }
 }
