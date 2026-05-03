@@ -73,6 +73,15 @@ BoardState init_board(void)
     return board;
 }
 
-void make_move(GameState game_state){
+void make_move(GameState *game_state, int output_position){
+    int input_position = game_state->bit_position;
 
+    Piece *other_piece = get_piece_by_position(output_position, &(game_state->board));
+    if (!(other_piece == NULL)){
+        unset_bit(&(other_piece->pos_bb), output_position);
+    }
+    printf("Selected piece symbol %c\n", game_state->selected_piece->symbol);
+
+    unset_bit(&(game_state->selected_piece->pos_bb), input_position);
+    set_bit(&(game_state->selected_piece->pos_bb), output_position);
 }

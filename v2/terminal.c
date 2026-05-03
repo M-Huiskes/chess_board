@@ -39,7 +39,7 @@ static void print_board_from_bitboards(BoardState *board,
                 Piece *piece = get_piece_by_index(i, board);
                 uint64_t piece_bb = piece->pos_bb;
 
-                if (piece_bb & mask) {
+                if ((piece_bb & mask) && !(possible_moves & mask)) {
                     printf("%c", piece->symbol);
                     piece_on_square = 1;
                     break;
@@ -108,7 +108,7 @@ void get_input_piece(GameState *game_state)
     game_state->selected_square = input_sq;
 }
 
-Square get_user_output_square(uint64_t possible_moves)
+int get_user_output_square(uint64_t possible_moves)
 {
     Square output_sq = get_square_by_user_input(0);
     int output_position = position_from_square(&output_sq);
@@ -118,20 +118,24 @@ Square get_user_output_square(uint64_t possible_moves)
         return get_user_output_square(possible_moves);
     }
 
-    return output_sq;
+    return output_position;
 }
 
 void play_terminal_game(GameState *game_state)
 {
     int running = 1;
-    int needs_redraw = 1;
     uint64_t possible_moves = (uint64_t) 0;
     print_board_from_bitboards(&(game_state->board), possible_moves);
 
     while (running) {
+        // Get input piece from user and print whole board + possible moves
         get_input_piece(game_state);
         possible_moves = find_possible_moves(game_state);
         print_board_from_bitboards(&(game_state->board), possible_moves);
-        Square output_sq = get_user_output_square(possible_moves);
+        
+        // Get output position from user, verify it is a valid move and print updated board
+        int output_position = get_user_output_square(possible_moves);
+        make_move(game_state, output_position);
+        print_board_from_bitboards(&(game_state->board), (uint64_t) 0);
     }
 }

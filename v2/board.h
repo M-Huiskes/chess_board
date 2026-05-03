@@ -26,5 +26,6 @@ uint64_t get_full_bit_board(BoardState *board);
 Piece *get_piece_by_index(int index, BoardState *board);
 Piece *get_piece_by_square(Square *input_square, BoardState *board);
 Piece *get_piece_by_position(int position, BoardState *board);
+void make_move(GameState *game_state, int output_position);
 
 #endif
