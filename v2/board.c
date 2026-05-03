@@ -217,9 +217,6 @@ static void print_bitboard(uint64_t bitboard)
 void calculate_attack_map(GameState *game_state)
 {
     char color_playing = game_state->selected_piece->color;
-    char enemy_color = color_playing == 'w' ? 'b' : 'w';
-    uint64_t full_enemy_board =
-        get_full_team_bit_board(&(game_state->board), enemy_color);
 
     uint64_t attack_map = (uint64_t) 0;
     for (int i = 0; i < 12; i++) {
@@ -240,7 +237,7 @@ void calculate_attack_map(GameState *game_state)
             game_state->bit_position = position;
             game_state->selected_square = square_from_position(position);
             uint64_t possible_moves = find_possible_moves(game_state);
-            attack_map |= possible_moves & full_enemy_board;
+            attack_map |= possible_moves;
             piece_bb &= piece_bb - 1;
         }
     }

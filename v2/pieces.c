@@ -69,6 +69,16 @@ void init_pieces(Piece team[6], char color)
     }
 }
 
+TeamState get_team_state_by_color(GameState *game_state, char color)
+{
+    return color == 'w' ? game_state->board.white : game_state->board.black;
+}
+
+TeamState get_enemy_team_state(GameState *game_state, char color)
+{
+    return color == 'w' ? game_state->board.black : game_state->board.white;
+}
+
 int is_enemy(char piece_color, int position, BoardState *board)
 {
     Piece *other_piece = get_piece_by_position(position, board);
@@ -331,6 +341,13 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
     find_diagonal_moves(game_state, max_counter, full_board, &possible_moves);
     find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
 
+    // Prevent moving in check
+    TeamState enemy_team = get_enemy_team_state(game_state, color_moving);
+    uint64_t enemy_attack_map = enemy_team.attack_map;
+
+    possible_moves = possible_moves & ~enemy_attack_map;
+    print_bitboard(possible_moves);
+
     // Castling
     return possible_moves;
 }
@@ -364,6 +381,7 @@ uint64_t find_possible_moves(GameState *game_state)
     case 'K':
     case 'k':
         possible_moves = find_possible_king_moves(game_state, full_board);
+        break;
 
     default:
         possible_moves = (uint64_t) 0;
