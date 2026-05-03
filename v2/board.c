@@ -91,10 +91,11 @@ void make_move(GameState *game_state, int output_position)
 
     push_move(&(game_state->move_history),
               encode_move(input_position, output_position, move_type));
+    game_state->last_moved_piece = game_state->selected_piece->symbol;
 
     uint16_t last_move =
-        game_state->move_history.moves[game_state->move_history.count-1];
-    
+        game_state->move_history.moves[game_state->move_history.count - 1];
+
     printf("Last move: from %d, to %d, flags %d\n", get_from(last_move),
            get_to(last_move), get_flags(last_move));
     printf("Number of moves: %d\n", game_state->move_history.count);

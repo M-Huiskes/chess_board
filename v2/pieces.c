@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 const uint64_t START_WHITE_PAWNS = 0x000000000000FF00ULL;
 const uint64_t START_BLACK_PAWNS = 0x00FF000000000000ULL;
@@ -87,6 +88,7 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
     uint64_t possible_moves = (uint64_t) 0;
     char color_playing = game_state->selected_piece->color;
     int position = game_state->bit_position;
+    MoveHistory move_history = game_state->move_history;
 
     int is_first_move;
     if (color_playing == 'w') {
@@ -120,6 +122,22 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
         if (is_bit_set(full_board, take_directions[i]) &&
             is_enemy(color_playing, take_directions[i], &(game_state->board))) {
             possible_moves |= ((uint64_t) 1 << take_directions[i]);
+        }
+    }
+
+    // Generate en passant moves
+    if ((game_state->last_moved_piece == 'p' &&
+         game_state->selected_square.row == 4) ||
+        (game_state->last_moved_piece == 'P' &&
+         game_state->selected_square.row == 3)) {
+        uint16_t last_move = move_history.moves[move_history.count - 1];
+        int to_position = get_to(last_move);
+        int from_position = get_from(last_move);
+
+        if (abs(position - to_position) == 1 &&
+            abs(to_position - from_position) == 16) {
+            possible_moves |= (uint64_t) 1 << get_direction_pawn_move(
+                                  to_position, color_playing, 8);
         }
     }
 

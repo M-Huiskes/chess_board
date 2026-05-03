@@ -34,6 +34,7 @@ typedef struct GameState {
     Square selected_square;
     int bit_position;
     MoveHistory move_history;
+    char last_moved_piece;
 } GameState;
 
 GameState init_game_state();
