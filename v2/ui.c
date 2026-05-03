@@ -12,6 +12,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+void static get_promotion_pieces(char color, char promotion_pieces[4])
+{
+    if (color == 'w') {
+        promotion_pieces[0] = 'Q';
+        promotion_pieces[1] = 'R';
+        promotion_pieces[2] = 'N';
+        promotion_pieces[3] = 'B';
+    } else {
+        promotion_pieces[0] = 'q';
+        promotion_pieces[1] = 'r';
+        promotion_pieces[2] = 'n';
+        promotion_pieces[3] = 'b';
+    }
+}
+
 SDL_Renderer static *get_window_renderer()
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -34,6 +49,19 @@ SDL_Renderer static *get_window_renderer()
     return SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 }
 
+char static get_promotion_piece(char color, int row)
+{
+
+    char promotion_pieces[4];
+    get_promotion_pieces(color, promotion_pieces);
+    if (color == 'b') {
+        return promotion_pieces[row];
+    } else {
+        int index = abs(row - 7);
+        return promotion_pieces[index];
+    }
+}
+
 void static set_default_square(GameState *game_state)
 {
     // If same square is selected -> unselect square
@@ -42,14 +70,20 @@ void static set_default_square(GameState *game_state)
     game_state->bit_position = -1;
     game_state->possible_moves = (uint64_t) 0;
     game_state->output_position = 0;
+    game_state->awaiting_promotion = 0;
 }
 
 void static process_user_input(SDL_Event event, GameState *game_state)
 {
     int file = event.button.x / SQUARE_SIZE;
     int row = 7 - (event.button.y / SQUARE_SIZE);
-
     char color_playing = game_state->move_history.count % 2 == 0 ? 'w' : 'b';
+
+    if (game_state->awaiting_promotion) {
+        game_state->promote_to = get_promotion_piece(color_playing, row);
+        game_state->awaiting_promotion = 0;
+        return;
+    }
 
     if (game_state->selected_square.row == row &&
         game_state->selected_square.file == file) {
@@ -77,6 +111,14 @@ void static process_user_input(SDL_Event event, GameState *game_state)
 
     if (is_bit_set(game_state->possible_moves, position)) {
         game_state->output_position = position;
+
+        int last_row = color_playing == 'w' ? 7 : 0;
+
+        if ((game_state->selected_piece->symbol == 'P' ||
+             game_state->selected_piece->symbol == 'p') &&
+            position / 8 == last_row) {
+            game_state->awaiting_promotion = 1;
+        }
         return;
     }
 
@@ -160,7 +202,6 @@ void static render_piece(char symbol, SDL_Renderer *renderer, int file, int row)
 void static draw_possible_moves(SDL_Renderer *renderer, char board[8][8],
                                 uint64_t pos_mov)
 {
-    printf("running draw possible moves!!\n");
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file < 8; file++) {
             int sq = rank * 8 + file;
@@ -236,6 +277,50 @@ void static draw_possible_moves(SDL_Renderer *renderer, char board[8][8],
     }
 }
 
+void static render_promotion(SDL_Renderer *renderer, GameState *game_state)
+{
+    SDL_SetRenderDrawColor(renderer, 211, 211, 211, 255);
+    char color_moving = game_state->selected_piece->color;
+    int direction = color_moving == 'w' ? 1 : -1;
+
+    char promotion_pieces[4];
+    get_promotion_pieces(color_moving, promotion_pieces);
+
+    Square output_square = square_from_position(game_state->output_position);
+
+    for (int i = 0; i < 4; i++) {
+        int row = (7 - output_square.row + (i * direction));
+        int file = output_square.file;
+        int center_x = file * SQUARE_SIZE + SQUARE_SIZE / 2;
+        int center_y = row * SQUARE_SIZE + SQUARE_SIZE / 2;
+        int radius = SQUARE_SIZE / 2;
+        for (int w = 0; w < radius * 2; w++) {
+            for (int h = 0; h < radius * 2; h++) {
+                int dx = radius - w;
+                int dy = radius - h;
+                if ((dx * dx + dy * dy) <= (radius * radius)) {
+                    SDL_RenderDrawPoint(renderer, center_x + dx, center_y + dy);
+                }
+            }
+        }
+        SDL_Texture *tex = NULL;
+        char symbol = promotion_pieces[i];
+        SDL_Surface *surface = IMG_Load(get_image_path(symbol));
+        if (!surface) {
+            printf("Failed to load image: %s\n", IMG_GetError());
+            continue;
+        }
+        tex = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+        if (tex) {
+            SDL_Rect pieceRect = {file * SQUARE_SIZE, row * SQUARE_SIZE,
+                                  SQUARE_SIZE, SQUARE_SIZE};
+            SDL_RenderCopy(renderer, tex, NULL, &pieceRect);
+        }
+    }
+    SDL_RenderPresent(renderer);
+}
+
 void static render_board(SDL_Renderer *renderer, GameState *game_state)
 {
     char board_repr[8][8];
@@ -258,13 +343,16 @@ void static render_board(SDL_Renderer *renderer, GameState *game_state)
             SDL_RenderFillRect(renderer, &rect);
 
             if (board_repr[row][file] != 0) {
-                printf("Board presentation: %c\n", board_repr[row][file]);
                 render_piece(board_repr[row][file], renderer, file, render_row);
             }
         }
     }
     if (game_state->possible_moves != 0) {
         draw_possible_moves(renderer, board_repr, game_state->possible_moves);
+    }
+
+    if (game_state->awaiting_promotion) {
+        render_promotion(renderer, game_state);
     }
     SDL_RenderPresent(renderer);
 }
@@ -290,8 +378,10 @@ void play_ui_game(GameState *game_state)
 
         if (redraw_board) {
             if (game_state->output_position != 0) {
-                make_move(game_state);
-                set_default_square(game_state);
+                if (!(game_state->awaiting_promotion)) {
+                    make_move(game_state);
+                    set_default_square(game_state);
+                }
             }
             render_board(renderer, game_state);
             redraw_board = 0;

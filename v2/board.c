@@ -22,6 +22,14 @@ int position_from_square(Square *input_square)
     return input_square->row * 8 + input_square->file;
 }
 
+Square square_from_position(int position)
+{
+    int row = position / 8;
+    int file = position % 8;
+
+    return (Square){file, row};
+}
+
 uint64_t get_full_bit_board(BoardState *board)
 {
     uint64_t full_board = (uint64_t) 0;
@@ -188,8 +196,6 @@ void make_move(GameState *game_state)
         move_type = handle_en_passant(game_state, output_position);
     }
 
-    printf("Selected piece symbol %c\n", game_state->selected_piece->symbol);
-
     unset_bit(&(game_state->selected_piece->pos_bb), input_position);
     if (game_state->promote_to != '0') {
         move_type =
@@ -205,7 +211,4 @@ void make_move(GameState *game_state)
     uint16_t last_move =
         game_state->move_history.moves[game_state->move_history.count - 1];
 
-    printf("Last move: from %d, to %d, flags %d\n", get_from(last_move),
-           get_to(last_move), get_flags(last_move));
-    printf("Number of moves: %d\n", game_state->move_history.count);
 }

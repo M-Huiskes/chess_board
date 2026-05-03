@@ -39,6 +39,7 @@ typedef struct GameState {
     char promote_to;
     int output_position;
     uint64_t possible_moves;
+    int awaiting_promotion;
 } GameState;
 
 GameState init_game_state();
