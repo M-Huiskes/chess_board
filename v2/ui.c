@@ -69,7 +69,8 @@ void static process_user_input(SDL_Event event, GameState *game_state)
         return;
     }
 
-    if (selected_piece != NULL && selected_piece->color != color_playing) {
+    if (selected_piece != NULL && selected_piece->color != color_playing &&
+        !(is_bit_set(game_state->possible_moves, position))) {
         set_default_square(game_state);
         return;
     }
@@ -130,6 +131,7 @@ void static bitboards_to_board(char board_repr[8][8], BoardState *board_state)
                 Piece *piece = get_piece_by_index(i, board_state);
                 if (piece->pos_bb & mask) {
                     piece_symbol = piece->symbol;
+                    break;
                 }
             }
             board_repr[rank][file] = piece_symbol;
@@ -255,7 +257,8 @@ void static render_board(SDL_Renderer *renderer, GameState *game_state)
             }
             SDL_RenderFillRect(renderer, &rect);
 
-            if (board_repr[render_row][file] != 0) {
+            if (board_repr[row][file] != 0) {
+                printf("Board presentation: %c\n", board_repr[row][file]);
                 render_piece(board_repr[row][file], renderer, file, render_row);
             }
         }
