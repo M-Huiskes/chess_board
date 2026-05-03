@@ -137,7 +137,7 @@ char get_promotion_piece_by_user_input()
     }
 
     char input_piece = input[0];
-    if (input_piece != 'R' || input_piece != 'N' || input_piece != 'B' ||
+    if (input_piece != 'R' && input_piece != 'N' && input_piece != 'B' &&
         input_piece != 'Q') {
         printf("Input is not a valid piece, make sure to make it a capital "
                "letter (R/N/B/Q)\n");
@@ -151,8 +151,6 @@ void check_is_promotion_move(GameState *game_state, int output_position)
     char color_playing = game_state->selected_piece->color;
 
     int last_row = color_playing == 'w' ? 7 : 0;
-    printf("Row is last row? %d\n", output_position / 8);
-    printf("last row: %d output position %d\n", last_row, output_position);
     if ((game_state->selected_piece->symbol == 'P' ||
          game_state->selected_piece->symbol == 'p') &&
         output_position / 8 == last_row) {
