@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+typedef struct GameState GameState;
+
 const extern uint64_t START_WHITE_PAWNS;
 const extern uint64_t START_BLACK_PAWNS;
 
@@ -29,5 +31,6 @@ typedef struct {
 } Piece;
 
 void init_pieces(Piece team[6], char color);
+uint64_t find_possible_moves(GameState *game_state);
 
 #endif

@@ -1,8 +1,8 @@
-#ifndef TERMINAL_H  
+#ifndef TERMINAL_H
 #define TERMINAL_H
 
-#include "board.h"
+#include "state.h"
 
-void play_terminal_game(BoardState *board);
+void play_terminal_game(GameState *game_state);
 
-#endif TERMINAL_H
+#endif

@@ -86,18 +86,20 @@ static Square get_square_by_user_input(int first_call)
     return selected_sq;
 }
 
-Piece *get_input_piece(BoardState *board)
+void get_input_piece(GameState *game_state)
 {
     Square input_sq = get_square_by_user_input(1);
-    Piece *input_piece = get_piece_by_square(&input_sq, board);
+    Piece *input_piece = get_piece_by_square(&input_sq, &(game_state->board));
 
     if (input_piece == NULL) {
         printf("Not a piece on this position, try again\n");
-        return get_input_piece(board);
+        return get_input_piece(game_state);
     }
 
     printf("You selected %c \n", input_piece->symbol);
-    return input_piece;
+    game_state->selected_piece = input_piece;
+    game_state->bit_position = position_from_square(&input_sq);
+    game_state->selected_square = input_sq;
 }
 
 void play_terminal_game(GameState *game_state)
@@ -108,7 +110,9 @@ void play_terminal_game(GameState *game_state)
     while (running) {
         print_board_from_bitboards(&(game_state->board));
 
-        Piece *input_piece = get_input_piece(&(game_state->board));
+        get_input_piece(game_state);
+        uint64_t possible_moves = find_possible_moves(game_state);
+        // print_bitboard(possible_moves);
         // Square output_sq = get_square_by_user_input(0);
     }
 }

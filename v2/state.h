@@ -3,7 +3,7 @@
 
 #include "board.h"
 
-typedef struct {
+typedef struct GameState {
     BoardState board;
     Piece *selected_piece;
     Square selected_square;

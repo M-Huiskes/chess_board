@@ -11,12 +11,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    GameState board = init_game_state();
+    GameState game_state = init_game_state();
 
     if (strcmp(argv[1], "terminal") == 0) {
-        play_terminal_game(&board);
+        play_terminal_game(&game_state);
     } else if (strcmp(argv[1], "ui") == 0) {
-        // start SDL2 UI-based game
         printf("Starting UI mode...\n");
     } else {
         printf("Unknown mode: %s\nUsage: ./chess <terminal|ui>\n", argv[1]);

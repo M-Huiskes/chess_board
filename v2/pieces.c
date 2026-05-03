@@ -1,8 +1,11 @@
 #include "pieces.h"
 
+#include "bit_utils.h"
 #include "board.h"
+#include "state.h"
 
 #include <stdint.h>
+#include <stdio.h>
 
 const uint64_t START_WHITE_PAWNS = 0x000000000000FF00ULL;
 const uint64_t START_BLACK_PAWNS = 0x00FF000000000000ULL;
@@ -16,6 +19,25 @@ const uint64_t START_WHITE_QUEEN = 0x0000000000000008ULL;
 const uint64_t START_BLACK_QUEEN = 0x0800000000000000ULL;
 const uint64_t START_WHITE_KING = 0x0000000000000010ULL;
 const uint64_t START_BLACK_KING = 0x1000000000000000ULL;
+
+static void print_bitboard(uint64_t bitboard)
+{
+    for (int rank = 7; rank >= 0; rank--) {
+        printf("%d |", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int sq = rank * 8 + file;
+            uint64_t mask = (uint64_t) 1 << sq;
+
+            if (bitboard & mask)
+                printf("x");
+            else
+                printf(".");
+        }
+        printf("\n");
+    }
+    printf("   --------\n");
+    printf("   abcdefgh\n");
+}
 
 void init_pieces(Piece team[6], char color)
 {
@@ -43,4 +65,58 @@ void init_pieces(Piece team[6], char color)
             .value = values[i],
         };
     }
+}
+
+int get_direction_pawn_move(int position, char color, int increment)
+{
+    return color == 'w' ? position + increment : position - increment;
+}
+
+uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
+{
+    uint64_t possible_moves = (uint64_t) 0;
+    char color_playing = game_state->selected_piece->color;
+    int position = game_state->bit_position;
+
+    int is_first_move;
+    if (color_playing == 'w') {
+        is_first_move = game_state->selected_square.row == 1 ? 1 : 0;
+    } else {
+        is_first_move = game_state->selected_square.row == 6 ? 1 : 0;
+    }
+
+    // Check one move forward
+    int direction_one = get_direction_pawn_move(position, color_playing, 8);
+    if (!(is_bit_set(full_board, direction_one))) {
+        possible_moves |= ((uint64_t) 1 << direction_one);
+
+        int direction_two =
+            get_direction_pawn_move(position, color_playing, 16);
+        // Check double move forward when pawn is still on home square
+        if (is_first_move && !(is_bit_set(full_board, direction_two))) {
+            possible_moves |= ((uint64_t) 1 << direction_two);
+        }
+    }
+    printf("Is first move? %d\n", is_first_move);
+    printf("Selected row? %d\n", game_state->selected_square.row);
+    print_bitboard(possible_moves);
+
+    return possible_moves;
+}
+
+uint64_t find_possible_moves(GameState *game_state)
+{
+    uint64_t full_board = get_full_bit_board(&(game_state->board));
+    uint64_t possible_moves;
+
+    switch (game_state->selected_piece->symbol) {
+    case 'P':
+    case 'p':
+        possible_moves = find_possible_pawn_moves(game_state, full_board);
+
+    default:
+        possible_moves = (uint64_t) 0;
+        break;
+    }
+    return possible_moves;
 }
