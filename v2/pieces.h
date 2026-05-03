@@ -1,5 +1,6 @@
 #ifndef PIECES_H
 #define PIECES_H
+#define KING_ARRAY_INDEX 5
 
 #include <stdint.h>
 

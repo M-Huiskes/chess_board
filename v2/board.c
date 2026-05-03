@@ -255,7 +255,22 @@ void calculate_attack_map(GameState *game_state)
 void is_check(GameState *game_state)
 {
     char color_playing = game_state->selected_piece->color;
-    
+    Piece enemy_king;
+    uint64_t attack_map;
+
+    if (color_playing == 'w') {
+        enemy_king = game_state->board.black.pieces[KING_ARRAY_INDEX];
+        attack_map = game_state->board.white.attack_map;
+    } else {
+        enemy_king = game_state->board.white.pieces[KING_ARRAY_INDEX];
+        attack_map = game_state->board.black.attack_map;
+    }
+
+    if (enemy_king.pos_bb & attack_map) {
+        game_state->is_check = 1;
+    } else {
+        game_state->is_check = 0;
+    }
 }
 
 void make_move(GameState *game_state)

@@ -62,6 +62,7 @@ GameState init_game_state(void)
         .output_position = 0,
         .possible_moves = (uint64_t) 0,
         .awaiting_promotion = 0,
+        .is_check = 0,
     };
 
     return game_state;
