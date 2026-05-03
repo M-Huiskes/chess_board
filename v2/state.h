@@ -36,6 +36,7 @@ typedef struct GameState {
     MoveHistory move_history;
     char last_moved_piece;
     int en_passant_possible;
+    char promote_to;
 } GameState;
 
 GameState init_game_state();

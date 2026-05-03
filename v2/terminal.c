@@ -2,7 +2,10 @@
 #include "board.h"
 #include "state.h"
 
+#include <ctype.h>
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void print_bitboard(uint64_t bitboard)
@@ -121,6 +124,47 @@ int get_user_output_square(uint64_t possible_moves)
     return output_position;
 }
 
+char get_promotion_piece_by_user_input()
+{
+    char input[64];
+    printf("The pawn is promoting, select a piece to promote to (e.g. R, Q "
+           "etc.): ");
+    fgets(input, sizeof(input), stdin);
+
+    if (strlen(input) > 1 && input[1] != '\n' && input[1] != '\0') {
+        printf("Too many input characters, only type one (e.g. Q)\n");
+        return get_promotion_piece_by_user_input();
+    }
+
+    char input_piece = input[0];
+    if (input_piece != 'R' || input_piece != 'N' || input_piece != 'B' ||
+        input_piece != 'Q') {
+        printf("Input is not a valid piece, make sure to make it a capital "
+               "letter (R/N/B/Q)\n");
+        return get_promotion_piece_by_user_input();
+    }
+    return input_piece;
+}
+
+void check_is_promotion_move(GameState *game_state, int output_position)
+{
+    char color_playing = game_state->selected_piece->color;
+
+    int last_row = color_playing == 'w' ? 7 : 0;
+    printf("Row is last row? %d\n", output_position / 8);
+    printf("last row: %d output position %d\n", last_row, output_position);
+    if ((game_state->selected_piece->symbol == 'P' ||
+         game_state->selected_piece->symbol == 'p') &&
+        output_position / 8 == last_row) {
+
+        char promote_to = get_promotion_piece_by_user_input();
+        if (color_playing == 'b') {
+            promote_to = tolower(promote_to);
+        }
+        game_state->promote_to = promote_to;
+    }
+}
+
 void play_terminal_game(GameState *game_state)
 {
     int running = 1;
@@ -132,9 +176,11 @@ void play_terminal_game(GameState *game_state)
         get_input_piece(game_state);
         possible_moves = find_possible_moves(game_state);
         print_board_from_bitboards(&(game_state->board), possible_moves);
-        
-        // Get output position from user, verify it is a valid move and print updated board
+
+        // Get output position from user, verify it is a valid move and print
+        // updated board
         int output_position = get_user_output_square(possible_moves);
+        check_is_promotion_move(game_state, output_position);
         make_move(game_state, output_position);
         print_board_from_bitboards(&(game_state->board), (uint64_t) 0);
     }

@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 const uint64_t START_WHITE_PAWNS = 0x000000000000FF00ULL;
 const uint64_t START_BLACK_PAWNS = 0x00FF000000000000ULL;
@@ -118,7 +119,7 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
     for (int i = 0; i < 2; i++) {
 
         if (take_directions[i] > 63 || take_directions[i] < 0 ||
-            abs((take_directions[i] % 8) - (position % 8)) != 1) {
+            abs(take_directions[i] / 8 - position / 8) != 1) {
             continue;
         }
         if (is_bit_set(full_board, take_directions[i]) &&
