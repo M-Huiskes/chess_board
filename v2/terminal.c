@@ -23,7 +23,8 @@ static void print_bitboard(uint64_t bitboard)
     printf("   abcdefgh\n");
 }
 
-static void print_board_from_bitboards(BoardState *board)
+static void print_board_from_bitboards(BoardState *board,
+                                       uint64_t possible_moves)
 {
     for (int row = 7; row >= 0; row--) {
         printf("%d |", row + 1);
@@ -45,7 +46,11 @@ static void print_board_from_bitboards(BoardState *board)
             }
 
             if (!(piece_on_square)) {
-                printf(".");
+                if (possible_moves & mask) {
+                    printf("x");
+                } else {
+                    printf(".");
+                }
             }
         }
         printf("\n");
@@ -106,13 +111,14 @@ void play_terminal_game(GameState *game_state)
 {
     int running = 1;
     int needs_redraw = 1;
+    uint64_t possible_moves = (uint64_t) 0;
 
     while (running) {
-        print_board_from_bitboards(&(game_state->board));
+        print_board_from_bitboards(&(game_state->board), possible_moves);
 
         get_input_piece(game_state);
-        uint64_t possible_moves = find_possible_moves(game_state);
-        // print_bitboard(possible_moves);
+        possible_moves = find_possible_moves(game_state);
+        print_bitboard(possible_moves);
         // Square output_sq = get_square_by_user_input(0);
     }
 }

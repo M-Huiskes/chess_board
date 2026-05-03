@@ -33,6 +33,11 @@ Piece *get_piece_by_square(Square *input_square, BoardState *board)
 {
     int position = position_from_square(input_square);
 
+    return get_piece_by_position(position, board);
+}
+
+Piece *get_piece_by_position(int position, BoardState *board)
+{
     if (position < 0 || position > 63) {
         return NULL;
     }
@@ -48,6 +53,7 @@ Piece *get_piece_by_square(Square *input_square, BoardState *board)
 
     return NULL;
 }
+
 void init_team_state(TeamState *team_state, char color)
 {
     team_state->short_castle_allowed = 1;

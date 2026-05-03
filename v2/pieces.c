@@ -67,6 +67,16 @@ void init_pieces(Piece team[6], char color)
     }
 }
 
+int is_enemy(char piece_color, int position, BoardState *board)
+{
+    Piece *other_piece = get_piece_by_position(position, board);
+
+    if (piece_color != other_piece->color) {
+        return 1;
+    }
+    return 0;
+}
+
 int get_direction_pawn_move(int position, char color, int increment)
 {
     return color == 'w' ? position + increment : position - increment;
@@ -97,9 +107,21 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
             possible_moves |= ((uint64_t) 1 << direction_two);
         }
     }
-    printf("Is first move? %d\n", is_first_move);
-    printf("Selected row? %d\n", game_state->selected_square.row);
-    print_bitboard(possible_moves);
+
+    // Generate possible taking moves
+    int take_directions[2] = {
+        get_direction_pawn_move(position, color_playing, 7),
+        get_direction_pawn_move(position, color_playing, 9)};
+
+    for (int i = 0; i < 2; i++) {
+        if (take_directions[i] > 63 || take_directions[i] < 0) {
+            continue;
+        }
+        if (is_bit_set(full_board, take_directions[i]) &&
+            is_enemy(color_playing, take_directions[i], &(game_state->board))) {
+            possible_moves |= ((uint64_t) 1 << take_directions[i]);
+        }
+    }
 
     return possible_moves;
 }
@@ -113,6 +135,7 @@ uint64_t find_possible_moves(GameState *game_state)
     case 'P':
     case 'p':
         possible_moves = find_possible_pawn_moves(game_state, full_board);
+        break;
 
     default:
         possible_moves = (uint64_t) 0;
