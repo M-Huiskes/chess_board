@@ -138,6 +138,7 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
             abs(to_position - from_position) == 16) {
             possible_moves |= (uint64_t) 1 << get_direction_pawn_move(
                                   to_position, color_playing, 8);
+            game_state->en_passant_possible = 1;
         }
     }
 

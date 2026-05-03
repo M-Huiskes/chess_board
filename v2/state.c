@@ -56,6 +56,8 @@ GameState init_game_state(void)
         .selected_square = {-1, -1},
         .bit_position = -1,
         .move_history = init_move_history(),
+        .last_moved_piece = '0',
+        .en_passant_possible = 0,
     };
 
     return game_state;

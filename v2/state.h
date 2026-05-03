@@ -35,6 +35,7 @@ typedef struct GameState {
     int bit_position;
     MoveHistory move_history;
     char last_moved_piece;
+    int en_passant_possible;
 } GameState;
 
 GameState init_game_state();

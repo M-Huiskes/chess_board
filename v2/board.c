@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 Piece *get_piece_by_index(int index, BoardState *board)
 {
@@ -80,10 +81,39 @@ void make_move(GameState *game_state, int output_position)
 
     Piece *other_piece =
         get_piece_by_position(output_position, &(game_state->board));
-    if (!(other_piece == NULL)) {
+    if (other_piece != NULL) {
         unset_bit(&(other_piece->pos_bb), output_position);
         move_type = CAPTURE;
     }
+
+    if (game_state->en_passant_possible) {
+        if (abs(input_position - output_position) != 8 && other_piece == NULL) {
+
+            int other_pawn_pos = game_state->selected_piece->color == 'w'
+                                     ? output_position - 8
+                                     : output_position + 8;
+            Piece *other_pawn =
+                get_piece_by_position(other_pawn_pos, &(game_state->board));
+            
+
+            if (other_pawn != NULL) {
+                char other_pawn_symbol =
+                    game_state->selected_piece->color == 'w' ? 'p' : 'P';
+                if (other_pawn->symbol != other_pawn_symbol) {
+                    fprintf(stderr, "Error: en passant target is not a pawn\n");
+                    exit(EXIT_FAILURE);
+                }
+                unset_bit(&(other_pawn->pos_bb),
+                          other_pawn_pos);
+            } else {
+                fprintf(stderr,
+                        "Did not find a piece to capture in en passant\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        game_state->en_passant_possible = 0;
+    }
+
     printf("Selected piece symbol %c\n", game_state->selected_piece->symbol);
 
     unset_bit(&(game_state->selected_piece->pos_bb), input_position);
