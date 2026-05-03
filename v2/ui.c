@@ -64,7 +64,7 @@ void render_board(SDL_Renderer *renderer, GameState *game_state,
         for (int file = 0; file < 8; file++) {
             SDL_Rect rect = {file * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE,
                              SQUARE_SIZE};
-            if ((row + file) % 2 == 1) {
+            if ((row + file) % 2 == 0) {
                 SDL_SetRenderDrawColor(renderer, 240, 217, 181, 255);
             } else {
                 SDL_SetRenderDrawColor(renderer, 181, 136, 99, 255);
