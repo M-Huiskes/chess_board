@@ -321,6 +321,32 @@ void static render_promotion(SDL_Renderer *renderer, GameState *game_state)
     SDL_RenderPresent(renderer);
 }
 
+void render_check(SDL_Renderer *renderer, GameState *game_state)
+{
+    SDL_SetRenderDrawColor(renderer, 220, 50, 50, 180);
+
+    char color_moving = color_to_move(game_state);
+    Piece king = color_moving == 'w'
+                     ? game_state->board.white.pieces[KING_ARRAY_INDEX]
+                     : game_state->board.black.pieces[KING_ARRAY_INDEX];
+    int king_position = get_lowest_bit_index(king.pos_bb);
+    Square king_square = square_from_position(king_position);
+
+    int center_x = king_square.file * SQUARE_SIZE + SQUARE_SIZE / 2;
+    int center_y = (7 - king_square.row) * SQUARE_SIZE + SQUARE_SIZE / 2;
+    int radius = SQUARE_SIZE / 2;
+
+    for (int w = 0; w < radius * 2; w++) {
+        for (int h = 0; h < radius * 2; h++) {
+            int dx = radius - w;
+            int dy = radius - h;
+            if ((dx * dx + dy * dy) <= (radius * radius)) {
+                SDL_RenderDrawPoint(renderer, center_x + dx, center_y + dy);
+            }
+        }
+    }
+}
+
 void static render_board(SDL_Renderer *renderer, GameState *game_state)
 {
     char board_repr[8][8];
@@ -353,6 +379,9 @@ void static render_board(SDL_Renderer *renderer, GameState *game_state)
 
     if (game_state->awaiting_promotion) {
         render_promotion(renderer, game_state);
+    }
+    if (game_state->is_check) {
+        render_check(renderer, game_state);
     }
     SDL_RenderPresent(renderer);
 }

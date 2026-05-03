@@ -305,3 +305,8 @@ void make_move(GameState *game_state)
     calculate_attack_map(game_state);
     is_check(game_state);
 }
+
+char color_to_move(GameState *game_state)
+{
+    return game_state->move_history.count % 2 == 0 ? 'w' : 'b';
+}
