@@ -40,6 +40,22 @@ uint64_t get_full_bit_board(BoardState *board)
     return full_board;
 }
 
+uint64_t get_full_team_bit_board(BoardState *board, char color)
+{
+    uint64_t full_board = (uint64_t) 0;
+    for (int i = 0; i < 12; i++) {
+        if (color == 'w' && i >= 6) {
+            continue;
+        }
+        if (color == 'b' && i < 6) {
+            continue;
+        }
+        Piece *piece = get_piece_by_index(i, board);
+        full_board |= piece->pos_bb;
+    }
+    return full_board;
+}
+
 Piece *get_piece_by_square(Square *input_square, BoardState *board)
 {
     int position = position_from_square(input_square);
@@ -179,6 +195,69 @@ int handle_promotion_move(GameState *game_state, int output_position,
     return move_type;
 }
 
+static void print_bitboard(uint64_t bitboard)
+{
+    for (int rank = 7; rank >= 0; rank--) {
+        printf("%d |", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int sq = rank * 8 + file;
+            uint64_t mask = (uint64_t) 1 << sq;
+
+            if (bitboard & mask)
+                printf("x");
+            else
+                printf(".");
+        }
+        printf("\n");
+    }
+    printf("   --------\n");
+    printf("   abcdefgh\n");
+}
+
+void calculate_attack_map(GameState *game_state)
+{
+    char color_playing = game_state->selected_piece->color;
+    char enemy_color = color_playing == 'w' ? 'b' : 'w';
+    uint64_t full_enemy_board =
+        get_full_team_bit_board(&(game_state->board), enemy_color);
+
+    uint64_t attack_map = (uint64_t) 0;
+    for (int i = 0; i < 12; i++) {
+        if (color_playing == 'w' && i >= 6) {
+            continue;
+        }
+        if (color_playing == 'b' && i < 6) {
+            continue;
+        }
+        Piece *piece = get_piece_by_index(i, &(game_state->board));
+        // Loop over each piece and each position where this piece is
+        uint64_t piece_bb = piece->pos_bb;
+        game_state->selected_piece = piece;
+        while (piece_bb) {
+            int position = get_lowest_bit_index(piece_bb);
+            // Update game_state accordingly, this is ugly!
+            // but after make_move all these values are set to default values
+            game_state->bit_position = position;
+            game_state->selected_square = square_from_position(position);
+            uint64_t possible_moves = find_possible_moves(game_state);
+            attack_map |= possible_moves & full_enemy_board;
+            piece_bb &= piece_bb - 1;
+        }
+    }
+
+    if (color_playing == 'w') {
+        game_state->board.white.attack_map = attack_map;
+    } else {
+        game_state->board.black.attack_map = attack_map;
+    }
+}
+
+void is_check(GameState *game_state)
+{
+    char color_playing = game_state->selected_piece->color;
+    
+}
+
 void make_move(GameState *game_state)
 {
     int output_position = game_state->output_position;
@@ -208,7 +287,6 @@ void make_move(GameState *game_state)
               encode_move(input_position, output_position, move_type));
     game_state->last_moved_piece = game_state->selected_piece->symbol;
 
-    uint16_t last_move =
-        game_state->move_history.moves[game_state->move_history.count - 1];
-
+    calculate_attack_map(game_state);
+    is_check(game_state);
 }
