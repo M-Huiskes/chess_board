@@ -74,6 +74,36 @@ BoardState init_board(void)
     return board;
 }
 
+int handle_en_passant(GameState *game_state, int output_position)
+{
+    int input_position = game_state->bit_position;
+    int played_en_passant = QUIET;
+    if (abs(input_position - output_position) != 8) {
+
+        int other_pawn_pos = game_state->selected_piece->color == 'w'
+                                 ? output_position - 8
+                                 : output_position + 8;
+        Piece *other_pawn =
+            get_piece_by_position(other_pawn_pos, &(game_state->board));
+
+        if (other_pawn != NULL) {
+            char other_pawn_symbol =
+                game_state->selected_piece->color == 'w' ? 'p' : 'P';
+            if (other_pawn->symbol != other_pawn_symbol) {
+                fprintf(stderr, "Error: en passant target is not a pawn\n");
+                exit(EXIT_FAILURE);
+            }
+            unset_bit(&(other_pawn->pos_bb), other_pawn_pos);
+            played_en_passant = EN_PASSANT;
+        } else {
+            fprintf(stderr, "Did not find a piece to capture in en passant\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    game_state->en_passant_possible = 0;
+    return played_en_passant;
+}
+
 void make_move(GameState *game_state, int output_position)
 {
     int input_position = game_state->bit_position;
@@ -86,32 +116,8 @@ void make_move(GameState *game_state, int output_position)
         move_type = CAPTURE;
     }
 
-    if (game_state->en_passant_possible) {
-        if (abs(input_position - output_position) != 8 && other_piece == NULL) {
-
-            int other_pawn_pos = game_state->selected_piece->color == 'w'
-                                     ? output_position - 8
-                                     : output_position + 8;
-            Piece *other_pawn =
-                get_piece_by_position(other_pawn_pos, &(game_state->board));
-            
-
-            if (other_pawn != NULL) {
-                char other_pawn_symbol =
-                    game_state->selected_piece->color == 'w' ? 'p' : 'P';
-                if (other_pawn->symbol != other_pawn_symbol) {
-                    fprintf(stderr, "Error: en passant target is not a pawn\n");
-                    exit(EXIT_FAILURE);
-                }
-                unset_bit(&(other_pawn->pos_bb),
-                          other_pawn_pos);
-            } else {
-                fprintf(stderr,
-                        "Did not find a piece to capture in en passant\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-        game_state->en_passant_possible = 0;
+    if (game_state->en_passant_possible && other_piece == NULL) {
+        move_type = handle_en_passant(game_state, output_position);
     }
 
     printf("Selected piece symbol %c\n", game_state->selected_piece->symbol);
