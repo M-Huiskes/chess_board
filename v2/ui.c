@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-SDL_Renderer *get_window_renderer()
+SDL_Renderer static *get_window_renderer()
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -32,7 +32,7 @@ SDL_Renderer *get_window_renderer()
     return SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 }
 
-void process_user_input(SDL_Event event, GameState *game_state)
+void static process_user_input(SDL_Event event, GameState *game_state)
 {
     int file = event.button.x / SQUARE_SIZE;
     int row = 7 - (event.button.y / SQUARE_SIZE);
@@ -57,9 +57,81 @@ void process_user_input(SDL_Event event, GameState *game_state)
         get_piece_by_square(&selected_sq, &(game_state->board));
 }
 
-void render_board(SDL_Renderer *renderer, GameState *game_state,
-                  uint64_t possible_moves)
+const char *get_image_path(char symbol)
 {
+    switch (symbol) {
+    case 'P':
+        return "images/pawn_w.png";
+    case 'p':
+        return "images/pawn_b.png";
+    case 'R':
+        return "images/rook_w.png";
+    case 'r':
+        return "images/rook_b.png";
+    case 'N':
+        return "images/knight_w.png";
+    case 'n':
+        return "images/knight_b.png";
+    case 'B':
+        return "images/bishop_w.png";
+    case 'b':
+        return "images/bishop_b.png";
+    case 'Q':
+        return "images/queen_w.png";
+    case 'q':
+        return "images/queen_b.png";
+    case 'K':
+        return "images/king_w.png";
+    case 'k':
+        return "images/king_b.png";
+    default:
+        return NULL;
+    }
+}
+
+void static bitboards_to_board(char board_repr[8][8], BoardState *board_state)
+{
+    for (int rank = 7; rank >= 0; rank--) {
+        for (int file = 0; file < 8; file++) {
+            int sq = rank * 8 + file;
+            uint64_t mask = (uint64_t) 1 << sq;
+            char piece_symbol = 0;
+
+            for (int i = 0; i < 12; i++) {
+                Piece *piece = get_piece_by_index(i, board_state);
+                if (piece->pos_bb & mask) {
+                    piece_symbol = piece->symbol;
+                }
+            }
+            board_repr[rank][file] = piece_symbol;
+        }
+    }
+}
+
+void static render_piece(char symbol, SDL_Renderer *renderer, int file, int row)
+{
+    SDL_Texture *tex = NULL;
+    SDL_Surface *surface = IMG_Load(get_image_path(symbol));
+    if (!surface) {
+        printf("Failed to load image: %s\n", IMG_GetError());
+        return;
+    }
+    tex = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    if (tex) {
+        SDL_Rect pieceRect = {file * SQUARE_SIZE, row * SQUARE_SIZE,
+                              SQUARE_SIZE, SQUARE_SIZE};
+        SDL_RenderCopy(renderer, tex, NULL, &pieceRect);
+    }
+}
+
+void static render_board(SDL_Renderer *renderer, GameState *game_state,
+                         uint64_t possible_moves)
+{
+    char board_repr[8][8];
+    bitboards_to_board(board_repr, &(game_state->board));
+
     for (int row = 7; row >= 0; row--) {
         for (int file = 0; file < 8; file++) {
             SDL_Rect rect = {file * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE,
@@ -70,6 +142,10 @@ void render_board(SDL_Renderer *renderer, GameState *game_state,
                 SDL_SetRenderDrawColor(renderer, 181, 136, 99, 255);
             }
             SDL_RenderFillRect(renderer, &rect);
+
+            if (board_repr[row][file] != 0) {
+                render_piece(board_repr[row][file], renderer, file, row);
+            }
         }
     }
     SDL_RenderPresent(renderer);
