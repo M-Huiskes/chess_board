@@ -23,7 +23,12 @@ typedef enum {
 } MoveFlag;
 
 typedef struct {
-    uint16_t *moves;
+    uint16_t move;
+    char captured_piece;
+} MoveRecord;
+
+typedef struct {
+    MoveRecord *moves;
     int count;
     int capacity;
 } MoveHistory;
@@ -44,10 +49,10 @@ typedef struct GameState {
 } GameState;
 
 GameState init_game_state();
-uint16_t encode_move(int from, int to, int flags);
+MoveRecord encode_move(int from, int to, int flags, char captured_piece);
 int get_from(uint16_t move);
 int get_to(uint16_t move);
 int get_flags(uint16_t move);
-void push_move(MoveHistory *history, uint16_t move);
+void push_move(MoveHistory *history, MoveRecord move);
 
 #endif

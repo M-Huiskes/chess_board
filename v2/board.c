@@ -8,6 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+char color_to_move(GameState *game_state)
+{
+    return game_state->move_history.count % 2 == 0 ? 'w' : 'b';
+}
+
 Piece *get_piece_by_index(int index, BoardState *board)
 {
     if (index < 6) {
@@ -275,16 +280,19 @@ void make_move(GameState *game_state)
     int output_position = game_state->output_position;
     int input_position = game_state->bit_position;
     int move_type = QUIET;
+    char captured_piece_symbol = '0';
 
     Piece *other_piece =
         get_piece_by_position(output_position, &(game_state->board));
     if (other_piece != NULL) {
         unset_bit(&(other_piece->pos_bb), output_position);
         move_type = CAPTURE;
+        captured_piece_symbol = other_piece->symbol;
     }
 
     if (game_state->en_passant_possible && other_piece == NULL) {
         move_type = handle_en_passant(game_state, output_position);
+        captured_piece_symbol = color_to_move(game_state) == 'w' ? 'p' : 'P';
     }
 
     unset_bit(&(game_state->selected_piece->pos_bb), input_position);
@@ -296,14 +304,12 @@ void make_move(GameState *game_state)
     }
 
     push_move(&(game_state->move_history),
-              encode_move(input_position, output_position, move_type));
+              encode_move(input_position, output_position, move_type,
+                          captured_piece_symbol));
     game_state->last_moved_piece = game_state->selected_piece->symbol;
+
+    printf("Last captured piece: %c\n", game_state->move_history.moves[game_state->move_history.count - 1].captured_piece);
 
     calculate_attack_map(game_state);
     is_check(game_state);
-}
-
-char color_to_move(GameState *game_state)
-{
-    return game_state->move_history.count % 2 == 0 ? 'w' : 'b';
 }

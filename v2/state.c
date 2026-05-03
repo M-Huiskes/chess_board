@@ -6,9 +6,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-uint16_t encode_move(int from, int to, int flags)
+MoveRecord encode_move(int from, int to, int flags, char captured_piece)
 {
-    return (uint16_t) ((flags << 12) | (to << 6) | from);
+    MoveRecord move_record = {
+        .move = (uint16_t) ((flags << 12) | (to << 6) | from),
+        .captured_piece = captured_piece,
+    };
+    return move_record;
 }
 
 int get_from(uint16_t move)
@@ -29,7 +33,7 @@ int get_flags(uint16_t move)
     return (move >> 12) & 0xF;
 }
 
-void push_move(MoveHistory *history, uint16_t move)
+void push_move(MoveHistory *history, MoveRecord move)
 {
     if (history->count == history->capacity) {
         history->capacity *= 2;
@@ -43,7 +47,7 @@ MoveHistory init_move_history(void)
     MoveHistory h;
     h.count = 0;
     h.capacity = 128;
-    h.moves = malloc(h.capacity * sizeof(uint16_t));
+    h.moves = malloc(h.capacity * sizeof(MoveRecord));
 
     return h;
 }
