@@ -4,10 +4,10 @@
 #include "board.h"
 #include "state.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 const uint64_t START_WHITE_PAWNS = 0x000000000000FF00ULL;
 const uint64_t START_BLACK_PAWNS = 0x00FF000000000000ULL;
@@ -148,6 +148,193 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
     return possible_moves;
 }
 
+int check_diag_move(int position, int next_pos)
+{
+    if (next_pos < 0 || next_pos > 63) {
+        return 0;
+    }
+
+    int next_row = next_pos / 8;
+    int old_row = position / 8;
+    int row_diff = next_row - old_row;
+    if (row_diff == 1 || row_diff == -1) {
+        return 1;
+    }
+    return 0;
+}
+
+int check_vertical_move(int next_pos)
+{
+    return (next_pos < 0 || next_pos > 63) ? 0 : 1;
+}
+
+int check_horizontal_move(int position, int next_pos)
+{
+    if (next_pos < 0 || next_pos > 63) {
+        return 0;
+    }
+    int next_row = next_pos / 8;
+    int old_row = position / 8;
+    int row_diff = next_row - old_row;
+
+    if (row_diff == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+void find_diagonal_moves(GameState *game_state, int max_counter,
+                         uint64_t full_board, uint64_t *possible_moves)
+{
+    int directions[4] = {7, 9, -7, -9};
+    int position = game_state->bit_position;
+
+    for (int i = 0; i < 4; i++) {
+        int counter = 1;
+        int next_pos = position + directions[i];
+        int old_pos = position;
+        while (check_diag_move(old_pos, next_pos) && counter <= max_counter) {
+            counter++;
+            if (is_bit_set(full_board, next_pos)) {
+                if (is_enemy(game_state->selected_piece->color, next_pos,
+                             &(game_state->board))) {
+                    *possible_moves |= (uint64_t) 1 << next_pos;
+                }
+                break;
+            }
+            *possible_moves |= (uint64_t) 1 << next_pos;
+            old_pos = next_pos;
+            next_pos = old_pos + directions[i];
+        }
+    }
+}
+
+uint64_t find_possible_bishop_moves(GameState *game_state, uint64_t full_board)
+{
+    int max_counter = 8;
+    uint64_t possible_moves = (uint64_t) 0;
+    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves);
+    return possible_moves;
+}
+
+void find_orthogonal_moves(GameState *game_state, int max_counter,
+                           uint64_t full_board, uint64_t *possible_moves)
+{
+    int position = game_state->bit_position;
+
+    int hor_dir[2] = {-1, 1};
+    for (int i = 0; i < 2; i++) {
+        int counter = 1;
+        int next_pos = position + hor_dir[i];
+        int old_pos = position;
+        while (check_horizontal_move(old_pos, next_pos) &&
+               counter <= max_counter) {
+            counter++;
+            if (is_bit_set(full_board, next_pos)) {
+                if (is_enemy(game_state->selected_piece->color, next_pos,
+                             &(game_state->board))) {
+                    *possible_moves |= (uint64_t) 1 << next_pos;
+                }
+                break;
+            }
+            *possible_moves |= (uint64_t) 1 << next_pos;
+            old_pos = next_pos;
+            next_pos = old_pos + hor_dir[i];
+        }
+    }
+
+    int ver_dir[2] = {-8, 8};
+    for (int i = 0; i < 2; i++) {
+        int counter = 1;
+        int next_pos = position + ver_dir[i];
+        int old_pos = position;
+        while (check_vertical_move(next_pos) && counter <= max_counter) {
+            counter++;
+            if (is_bit_set(full_board, next_pos)) {
+                if (is_enemy(game_state->selected_piece->color, next_pos,
+                             &(game_state->board))) {
+                    *possible_moves |= (uint64_t) 1 << next_pos;
+                }
+                break;
+            }
+            *possible_moves |= (uint64_t) 1 << next_pos;
+            old_pos = next_pos;
+            next_pos = old_pos + ver_dir[i];
+        }
+    }
+}
+
+uint64_t find_possible_rook_moves(GameState *game_state, uint64_t full_board)
+{
+    int max_counter = 8;
+    uint64_t possible_moves = (uint64_t) 0;
+    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
+    return possible_moves;
+}
+
+uint64_t find_possible_queen_moves(GameState *game_state, uint64_t full_board)
+{
+    int max_counter = 8;
+    uint64_t possible_moves = (uint64_t) 0;
+    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves);
+    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
+    return possible_moves;
+}
+
+uint64_t find_possible_knight_moves(GameState *game_state, uint64_t full_board)
+{
+    int position = game_state->bit_position;
+    uint64_t possible_moves = (uint64_t) 0;
+    int ver_dir[2] = {-8, 8};
+    int hor_step[2] = {-1, 1};
+    for (int i = 0; i < 2; i++) {
+        int pos_1 = position + 2 * ver_dir[i];
+        if (check_vertical_move(pos_1)) {
+            for (int j = 0; j < 2; j++) {
+                int new_pos = pos_1 + hor_step[j];
+                if (check_horizontal_move(pos_1, new_pos)) {
+                    if (is_bit_set(full_board, new_pos) &&
+                        !(is_enemy(game_state->selected_piece->color, new_pos,
+                                   &(game_state->board)))) {
+                        continue;
+                    }
+                    possible_moves |= (uint64_t) 1 << new_pos;
+                }
+            }
+        }
+        int pos_2 = position + 2 * hor_step[i];
+        if (check_horizontal_move(position, pos_2)) {
+            for (int j = 0; j < 2; j++) {
+                int new_hor = pos_2 + ver_dir[j];
+                if (check_vertical_move(new_hor)) {
+                    if (is_bit_set(full_board, new_hor) &&
+                        !(is_enemy(game_state->selected_piece->color, new_hor,
+                                   &(game_state->board)))) {
+                        continue;
+                    }
+                    possible_moves |= (uint64_t) 1 << new_hor;
+                }
+            }
+        }
+    }
+    return possible_moves;
+}
+
+uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
+{
+    Piece *piece = game_state->selected_piece;
+
+    char color_moving = piece->color;
+
+    int max_counter = 1;
+    uint64_t possible_moves = (uint64_t) 0;
+    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves);
+    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
+
+    // Castling
+    return possible_moves;
+}
+
 uint64_t find_possible_moves(GameState *game_state)
 {
     uint64_t full_board = get_full_bit_board(&(game_state->board));
@@ -158,6 +345,25 @@ uint64_t find_possible_moves(GameState *game_state)
     case 'p':
         possible_moves = find_possible_pawn_moves(game_state, full_board);
         break;
+    case 'B':
+    case 'b':
+        possible_moves = find_possible_bishop_moves(game_state, full_board);
+        break;
+    case 'R':
+    case 'r':
+        possible_moves = find_possible_rook_moves(game_state, full_board);
+        break;
+    case 'Q':
+    case 'q':
+        possible_moves = find_possible_queen_moves(game_state, full_board);
+        break;
+    case 'N':
+    case 'n':
+        possible_moves = find_possible_knight_moves(game_state, full_board);
+        break;
+    case 'K':
+    case 'k':
+        possible_moves = find_possible_king_moves(game_state, full_board);
 
     default:
         possible_moves = (uint64_t) 0;
