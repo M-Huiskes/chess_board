@@ -41,6 +41,7 @@ void static set_default_square(GameState *game_state)
     game_state->selected_piece = NULL;
     game_state->bit_position = -1;
     game_state->possible_moves = (uint64_t) 0;
+    game_state->output_position = 0;
 }
 
 void static process_user_input(SDL_Event event, GameState *game_state)
@@ -49,8 +50,6 @@ void static process_user_input(SDL_Event event, GameState *game_state)
     int row = 7 - (event.button.y / SQUARE_SIZE);
 
     char color_playing = game_state->move_history.count % 2 == 0 ? 'w' : 'b';
-
-    printf("File selected %d, row selected %d \n", file, row);
 
     if (game_state->selected_square.row == row &&
         game_state->selected_square.file == file) {
@@ -64,17 +63,26 @@ void static process_user_input(SDL_Event event, GameState *game_state)
     Piece *selected_piece =
         get_piece_by_square(&selected_sq, &(game_state->board));
 
-    if ((selected_piece == NULL &&
-         !(is_bit_set(game_state->possible_moves, position))) ||
-        selected_piece->color != color_playing) {
+    if (selected_piece == NULL &&
+        !(is_bit_set(game_state->possible_moves, position))) {
         set_default_square(game_state);
+        return;
+    }
+
+    if (selected_piece != NULL && selected_piece->color != color_playing) {
+        set_default_square(game_state);
+        return;
+    }
+
+    if (is_bit_set(game_state->possible_moves, position)) {
+        game_state->output_position = position;
         return;
     }
 
     game_state->selected_square = selected_sq;
     game_state->bit_position = position;
     game_state->selected_piece = selected_piece;
-
+    game_state->output_position = 0;
     game_state->possible_moves = find_possible_moves(game_state);
 }
 
