@@ -242,6 +242,7 @@ void calculate_attack_map(GameState *game_state)
             game_state->bit_position = position;
             game_state->selected_square = square_from_position(position);
             uint64_t possible_moves = find_possible_moves(game_state);
+            // TODO: For pawns this is not correct, only check the sqaures they attack!
             attack_map |= possible_moves;
             piece_bb &= piece_bb - 1;
         }
@@ -308,6 +309,7 @@ void make_move(GameState *game_state)
                           captured_piece_symbol));
     game_state->last_moved_piece = game_state->selected_piece->symbol;
 
+    // TODO: Fix attack map for pawns
     calculate_attack_map(game_state);
     is_check(game_state);
 
