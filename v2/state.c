@@ -6,16 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-MoveHistory init_move_history(void)
-{
-    MoveHistory h;
-    h.count = 0;
-    h.capacity = 128;
-    h.moves = malloc(h.capacity * sizeof(uint16_t));
-
-    return h;
-}
-
 uint16_t encode_move(int from, int to, int flags)
 {
     return (uint16_t) ((flags << 12) | (to << 6) | from);
@@ -46,6 +36,16 @@ void push_move(MoveHistory *history, uint16_t move)
         history->moves = realloc(history->moves, history->capacity);
     }
     history->moves[history->count++] = move;
+}
+
+MoveHistory init_move_history(void)
+{
+    MoveHistory h;
+    h.count = 0;
+    h.capacity = 128;
+    h.moves = malloc(h.capacity * sizeof(uint16_t));
+
+    return h;
 }
 
 GameState init_game_state(void)

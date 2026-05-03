@@ -33,30 +33,46 @@ SDL_Renderer static *get_window_renderer()
     return SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 }
 
+void static set_default_square(GameState *game_state)
+{
+    // If same square is selected -> unselect square
+    game_state->selected_square = (Square){-1, -1};
+    game_state->selected_piece = NULL;
+    game_state->bit_position = -1;
+    game_state->possible_moves = (uint64_t) 0;
+}
+
 void static process_user_input(SDL_Event event, GameState *game_state)
 {
     int file = event.button.x / SQUARE_SIZE;
     int row = 7 - (event.button.y / SQUARE_SIZE);
+
+    char color_playing = game_state->move_history.count % 2 == 0 ? 'w' : 'b';
 
     printf("File selected %d, row selected %d \n", file, row);
 
     if (game_state->selected_square.row == row &&
         game_state->selected_square.file == file) {
         // If same square is selected -> unselect square
-        game_state->selected_square = (Square){-1, -1};
-        game_state->selected_piece = NULL;
-        game_state->bit_position = -1;
-        game_state->possible_moves = (uint64_t) 0;
+        set_default_square(game_state);
 
         return;
     }
     Square selected_sq = (Square){file, row};
     int position = position_from_square(&selected_sq);
+    Piece *selected_piece =
+        get_piece_by_square(&selected_sq, &(game_state->board));
+
+    if (selected_piece == NULL || selected_piece->color != color_playing) {
+        set_default_square(game_state);
+        return;
+    }
 
     game_state->selected_square = selected_sq;
     game_state->bit_position = position;
-    game_state->selected_piece =
-        get_piece_by_square(&selected_sq, &(game_state->board));
+    game_state->selected_piece = selected_piece;
+
+    game_state->possible_moves = find_possible_moves(game_state);
 }
 
 const char *get_image_path(char symbol)
@@ -259,9 +275,6 @@ void play_ui_game(GameState *game_state)
         }
 
         if (redraw_board) {
-            if (game_state->selected_piece != NULL) {
-                game_state->possible_moves = find_possible_moves(game_state);
-            }
             render_board(renderer, game_state);
             redraw_board = 0;
         }
