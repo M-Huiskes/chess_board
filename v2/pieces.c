@@ -143,7 +143,7 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
          game_state->selected_square.row == 4) ||
         (game_state->last_moved_piece == 'P' &&
          game_state->selected_square.row == 3)) {
-        uint16_t last_move = move_history.moves[move_history.count - 1];
+        uint16_t last_move = move_history.moves[move_history.count - 1].move;
         int to_position = get_to(last_move);
         int from_position = get_from(last_move);
 
@@ -387,5 +387,6 @@ uint64_t find_possible_moves(GameState *game_state)
         possible_moves = (uint64_t) 0;
         break;
     }
+
     return possible_moves;
 }

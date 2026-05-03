@@ -308,8 +308,16 @@ void make_move(GameState *game_state)
                           captured_piece_symbol));
     game_state->last_moved_piece = game_state->selected_piece->symbol;
 
-    printf("Last captured piece: %c\n", game_state->move_history.moves[game_state->move_history.count - 1].captured_piece);
-
     calculate_attack_map(game_state);
     is_check(game_state);
+
+    // Calculate pinned pieces for other color by position -> these can't move
+    // next move
+
+    // Is double check? Checken Check diagonal/horizontal line from
+    // which check is generated. If so, check can either be countered by moving
+    // on this line (or moving king)
+
+    // Check by pawn / knight -> only stoppable by
+    // capturing said pawn/knight (or moving king)
 }
