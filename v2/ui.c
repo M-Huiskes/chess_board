@@ -286,6 +286,10 @@ void play_ui_game(GameState *game_state)
         }
 
         if (redraw_board) {
+            if (game_state->output_position != 0) {
+                make_move(game_state);
+                set_default_square(game_state);
+            }
             render_board(renderer, game_state);
             redraw_board = 0;
         }

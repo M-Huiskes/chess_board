@@ -116,7 +116,8 @@ int handle_en_passant(GameState *game_state, int output_position)
     return played_en_passant;
 }
 
-int handle_promotion_move(GameState *game_state, int output_position, int current_move_type)
+int handle_promotion_move(GameState *game_state, int output_position,
+                          int current_move_type)
 {
     Piece *promotion_piece =
         get_piece_by_symbol(game_state->promote_to, &(game_state->board));
@@ -125,53 +126,54 @@ int handle_promotion_move(GameState *game_state, int output_position, int curren
     int move_type;
 
     switch (game_state->promote_to) {
-        case 'N':
-        case 'n':
-            if (current_move_type == CAPTURE) {
-                move_type = PROMO_CAPTURE_KNIGHT;
-            } else {
-                move_type = PROMO_KNIGHT;
-            }
-            break;
-        case 'R':
-        case 'r':
-            if (current_move_type == CAPTURE) {
-                move_type = PROMO_CAPTURE_ROOK;
-            } else {
-                move_type = PROMO_ROOK;
-            }
-            break;
-        case 'Q':
-        case 'q':
-            if (current_move_type == CAPTURE) {
-                move_type = PROMO_CAPTURE_QUEEN;
-            } else {
-                move_type = PROMO_QUEEN;
-            }
-            break;
-        case 'B':
-        case 'b':
-            if (current_move_type == CAPTURE) {
-                move_type = PROMO_CAPTURE_BISHOP;
-            } else {
-                move_type = PROMO_BISHOP;
-            }
-            break;
-        default:
-            if (current_move_type == CAPTURE) {
-                move_type = PROMO_CAPTURE_QUEEN;
-            } else {
-                move_type = PROMO_QUEEN;
-            }
-            break;
+    case 'N':
+    case 'n':
+        if (current_move_type == CAPTURE) {
+            move_type = PROMO_CAPTURE_KNIGHT;
+        } else {
+            move_type = PROMO_KNIGHT;
+        }
+        break;
+    case 'R':
+    case 'r':
+        if (current_move_type == CAPTURE) {
+            move_type = PROMO_CAPTURE_ROOK;
+        } else {
+            move_type = PROMO_ROOK;
+        }
+        break;
+    case 'Q':
+    case 'q':
+        if (current_move_type == CAPTURE) {
+            move_type = PROMO_CAPTURE_QUEEN;
+        } else {
+            move_type = PROMO_QUEEN;
+        }
+        break;
+    case 'B':
+    case 'b':
+        if (current_move_type == CAPTURE) {
+            move_type = PROMO_CAPTURE_BISHOP;
+        } else {
+            move_type = PROMO_BISHOP;
+        }
+        break;
+    default:
+        if (current_move_type == CAPTURE) {
+            move_type = PROMO_CAPTURE_QUEEN;
+        } else {
+            move_type = PROMO_QUEEN;
+        }
+        break;
     }
 
     game_state->promote_to = '0';
     return move_type;
 }
 
-void make_move(GameState *game_state, int output_position)
+void make_move(GameState *game_state)
 {
+    int output_position = game_state->output_position;
     int input_position = game_state->bit_position;
     int move_type = QUIET;
 
@@ -190,7 +192,8 @@ void make_move(GameState *game_state, int output_position)
 
     unset_bit(&(game_state->selected_piece->pos_bb), input_position);
     if (game_state->promote_to != '0') {
-        move_type = handle_promotion_move(game_state, output_position, move_type);
+        move_type =
+            handle_promotion_move(game_state, output_position, move_type);
     } else {
         set_bit(&(game_state->selected_piece->pos_bb), output_position);
     }
