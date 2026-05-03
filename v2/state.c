@@ -59,6 +59,7 @@ GameState init_game_state(void)
         .last_moved_piece = '0',
         .en_passant_possible = 0,
         .promote_to = '0',
+        .output_position = 0,
     };
 
     return game_state;
