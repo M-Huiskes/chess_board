@@ -4,9 +4,11 @@
 #include "pieces.h"
 #include "state.h"
 
+#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 char color_to_move(GameState *game_state)
 {
@@ -98,11 +100,22 @@ Piece *get_piece_by_symbol(char symbol, BoardState *board)
     return NULL;
 }
 
+int is_enemy(char piece_color, int position, BoardState *board)
+{
+    Piece *other_piece = get_piece_by_position(position, board);
+
+    if (piece_color != other_piece->color) {
+        return 1;
+    }
+    return 0;
+}
+
 void init_team_state(TeamState *team_state, char color)
 {
     team_state->short_castle_allowed = 1;
     team_state->long_castle_allowed = 1;
     team_state->attack_map = (uint64_t) 0;
+    // team_state->pin_info = malloc(8 * sizeof(PinnedInfo));
     init_pieces(team_state->pieces, color);
 }
 
@@ -225,7 +238,8 @@ void calculate_attack_map(GameState *game_state)
     int attack_moves_only = 1;
 
     uint64_t attack_map = (uint64_t) 0;
-    // TODO: Make this faster by incrementally updating attack map (based on last moved pieces etc)
+    // TODO: Make this faster by incrementally updating attack map (based on
+    // last moved pieces etc)
     for (int i = 0; i < 12; i++) {
         if (color_playing == 'w' && i >= 6) {
             continue;
@@ -280,6 +294,68 @@ void is_check(GameState *game_state)
     }
 }
 
+void calculate_pinned_pieces(GameState *game_state)
+{
+    char color_playing = game_state->selected_piece->color;
+    TeamState team_state = color_playing == 'w' ? game_state->board.black
+                                                : game_state->board.white;
+    Piece enemy_king = team_state.pieces[KING_ARRAY_INDEX];
+    int king_position = get_lowest_bit_index(enemy_king.pos_bb);
+    uint64_t full_board = get_full_bit_board(&(game_state->board));
+    int count_pinned_pieces = 0;
+    printf("reached here!\n§");
+    // TODO: Check if I can reuse find_diagonal_moves for this, shares the
+    // same functionality
+    int diagonal_moves[4] = {7, 9, -7, -9};
+    for (int i = 0; i < 4; i++) {
+        int next_pos = king_position + diagonal_moves[i];
+        int old_pos = king_position;
+        int one_friendly_piece = 0;
+        printf("Loop number %d\n", i);
+        while (check_diag_move(old_pos, next_pos)) {
+            if (is_bit_set(full_board, next_pos)) {
+                if (!(is_enemy(enemy_king.color, next_pos,
+                               &(game_state->board)))) {
+                    if (!(one_friendly_piece)) {
+                        one_friendly_piece = 1;
+                    } else {
+                        one_friendly_piece = 0;
+                    }
+                }
+                if (is_enemy(enemy_king.color, next_pos,
+                             &(game_state->board))) {
+                    Piece *piece =
+                        get_piece_by_position(next_pos, &(game_state->board));
+
+                    if (piece == NULL) {
+                        continue;
+                    }
+                    if ((tolower(piece->symbol) == 'q' ||
+                         tolower(piece->symbol) == 'b') &&
+                        one_friendly_piece) {
+                        PinnedInfo pin_info = {
+                            .bit_position = next_pos,
+                            .direction = diagonal_moves[i],
+                        };
+                        // team_state.pin_info[count_pinned_pieces] = pin_info;
+                        count_pinned_pieces++;
+                        printf("Found pinned piece!!!\n");
+                    }
+                }
+            }
+            old_pos = next_pos;
+            next_pos = old_pos + diagonal_moves[i];
+        }
+    }
+    printf("Number of pinned pieces %d\n", count_pinned_pieces);
+
+    // TODO: Check if I can reuse find_horizontal_moves for this, shares the
+    // same functionality
+    // int directions[4] = {-1, 8, 1, -8};
+    // for (int i = 0; i < 4; i++) {
+    // }
+}
+
 void make_move(GameState *game_state)
 {
     int output_position = game_state->output_position;
@@ -313,8 +389,8 @@ void make_move(GameState *game_state)
                           captured_piece_symbol));
     game_state->last_moved_piece = game_state->selected_piece->symbol;
 
-    // TODO: Fix attack map for pawns
     calculate_attack_map(game_state);
+    calculate_pinned_pieces(game_state);
     is_check(game_state);
 
     // Calculate pinned pieces for other color by position -> these can't move

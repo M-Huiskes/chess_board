@@ -4,8 +4,14 @@
 #include "pieces.h"
 
 typedef struct {
+    int bit_position;
+    int direction;
+} PinnedInfo;
+
+typedef struct {
     Piece pieces[6];
     uint64_t attack_map;
+    // PinnedInfo *pin_info;
     int short_castle_allowed;
     int long_castle_allowed;
 } TeamState;
@@ -29,5 +35,6 @@ Piece *get_piece_by_position(int position, BoardState *board);
 Square square_from_position(int position);
 void make_move(GameState *game_state);
 char color_to_move(GameState *game_state);
+int is_enemy(char piece_color, int position, BoardState *board);
 
 #endif

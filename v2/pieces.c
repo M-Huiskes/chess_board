@@ -79,16 +79,6 @@ TeamState get_enemy_team_state(GameState *game_state, char color)
     return color == 'w' ? game_state->board.black : game_state->board.white;
 }
 
-int is_enemy(char piece_color, int position, BoardState *board)
-{
-    Piece *other_piece = get_piece_by_position(position, board);
-
-    if (piece_color != other_piece->color) {
-        return 1;
-    }
-    return 0;
-}
-
 int get_direction_pawn_move(int position, char color, int increment)
 {
     return color == 'w' ? position + increment : position - increment;
