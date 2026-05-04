@@ -32,6 +32,6 @@ typedef struct {
 } Piece;
 
 void init_pieces(Piece team[6], char color);
-uint64_t find_possible_moves(GameState *game_state);
+uint64_t find_possible_moves(GameState *game_state, int attack_moves_only);
 
 #endif

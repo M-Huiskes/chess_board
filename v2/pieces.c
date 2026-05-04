@@ -94,7 +94,8 @@ int get_direction_pawn_move(int position, char color, int increment)
     return color == 'w' ? position + increment : position - increment;
 }
 
-uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
+uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board,
+                                  int attack_moves_only)
 {
     uint64_t possible_moves = (uint64_t) 0;
     char color_playing = game_state->selected_piece->color;
@@ -108,16 +109,36 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
         is_first_move = game_state->selected_square.row == 6 ? 1 : 0;
     }
 
-    // Check one move forward
-    int direction_one = get_direction_pawn_move(position, color_playing, 8);
-    if (!(is_bit_set(full_board, direction_one))) {
-        possible_moves |= ((uint64_t) 1 << direction_one);
+    if (!(attack_moves_only)) {
+        // Check one move forward
+        int direction_one = get_direction_pawn_move(position, color_playing, 8);
+        if (!(is_bit_set(full_board, direction_one))) {
+            possible_moves |= ((uint64_t) 1 << direction_one);
 
-        int direction_two =
-            get_direction_pawn_move(position, color_playing, 16);
-        // Check double move forward when pawn is still on home square
-        if (is_first_move && !(is_bit_set(full_board, direction_two))) {
-            possible_moves |= ((uint64_t) 1 << direction_two);
+            int direction_two =
+                get_direction_pawn_move(position, color_playing, 16);
+            // Check double move forward when pawn is still on home square
+            if (is_first_move && !(is_bit_set(full_board, direction_two))) {
+                possible_moves |= ((uint64_t) 1 << direction_two);
+            }
+        }
+
+        // Generate en passant moves
+        if ((game_state->last_moved_piece == 'p' &&
+             game_state->selected_square.row == 4) ||
+            (game_state->last_moved_piece == 'P' &&
+             game_state->selected_square.row == 3)) {
+            uint16_t last_move =
+                move_history.moves[move_history.count - 1].move;
+            int to_position = get_to(last_move);
+            int from_position = get_from(last_move);
+
+            if (abs(position - to_position) == 1 &&
+                abs(to_position - from_position) == 16) {
+                possible_moves |= (uint64_t) 1 << get_direction_pawn_move(
+                                      to_position, color_playing, 8);
+                game_state->en_passant_possible = 1;
+            }
         }
     }
 
@@ -132,26 +153,11 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board)
             abs(take_directions[i] / 8 - position / 8) != 1) {
             continue;
         }
-        if (is_bit_set(full_board, take_directions[i]) &&
-            is_enemy(color_playing, take_directions[i], &(game_state->board))) {
+        if ((is_bit_set(full_board, take_directions[i]) &&
+             is_enemy(color_playing, take_directions[i],
+                      &(game_state->board))) ||
+            attack_moves_only) {
             possible_moves |= ((uint64_t) 1 << take_directions[i]);
-        }
-    }
-
-    // Generate en passant moves
-    if ((game_state->last_moved_piece == 'p' &&
-         game_state->selected_square.row == 4) ||
-        (game_state->last_moved_piece == 'P' &&
-         game_state->selected_square.row == 3)) {
-        uint16_t last_move = move_history.moves[move_history.count - 1].move;
-        int to_position = get_to(last_move);
-        int from_position = get_from(last_move);
-
-        if (abs(position - to_position) == 1 &&
-            abs(to_position - from_position) == 16) {
-            possible_moves |= (uint64_t) 1 << get_direction_pawn_move(
-                                  to_position, color_playing, 8);
-            game_state->en_passant_possible = 1;
         }
     }
 
@@ -346,13 +352,12 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
     uint64_t enemy_attack_map = enemy_team.attack_map;
 
     possible_moves = possible_moves & ~enemy_attack_map;
-    print_bitboard(possible_moves);
 
     // Castling
     return possible_moves;
 }
 
-uint64_t find_possible_moves(GameState *game_state)
+uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
 {
     uint64_t full_board = get_full_bit_board(&(game_state->board));
     uint64_t possible_moves;
@@ -360,7 +365,8 @@ uint64_t find_possible_moves(GameState *game_state)
     switch (game_state->selected_piece->symbol) {
     case 'P':
     case 'p':
-        possible_moves = find_possible_pawn_moves(game_state, full_board);
+        possible_moves =
+            find_possible_pawn_moves(game_state, full_board, attack_moves_only);
         break;
     case 'B':
     case 'b':

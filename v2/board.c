@@ -222,8 +222,10 @@ static void print_bitboard(uint64_t bitboard)
 void calculate_attack_map(GameState *game_state)
 {
     char color_playing = game_state->selected_piece->color;
+    int attack_moves_only = 1;
 
     uint64_t attack_map = (uint64_t) 0;
+    // TODO: Make this faster by incrementally updating attack map (based on last moved pieces etc)
     for (int i = 0; i < 12; i++) {
         if (color_playing == 'w' && i >= 6) {
             continue;
@@ -241,8 +243,10 @@ void calculate_attack_map(GameState *game_state)
             // but after make_move all these values are set to default values
             game_state->bit_position = position;
             game_state->selected_square = square_from_position(position);
-            uint64_t possible_moves = find_possible_moves(game_state);
-            // TODO: For pawns this is not correct, only check the sqaures they attack!
+            uint64_t possible_moves =
+                find_possible_moves(game_state, attack_moves_only);
+            // TODO: For pawns this is not correct, only check the sqaures they
+            // attack!
             attack_map |= possible_moves;
             piece_bb &= piece_bb - 1;
         }
