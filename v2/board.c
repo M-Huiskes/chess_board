@@ -353,10 +353,10 @@ void calculate_pinned_pieces(GameState *game_state)
                     if ((tolower(piece->symbol) == 'q' ||
                          (tolower(piece->symbol) == 'b' &&
                           (abs(directions[i]) == 7 ||
-                               abs(directions[i]) == 9)) ||
+                           abs(directions[i]) == 9)) ||
                          (tolower(piece->symbol) == 'r' &&
                           (abs(directions[i]) == 1 ||
-                               abs(directions[i]) == 8))) &&
+                           abs(directions[i]) == 8))) &&
                         one_friendly_piece) {
                         PinnedInfo pin_info = {
                             .bit_position = pinned_piece_pos,
@@ -412,16 +412,19 @@ void make_move(GameState *game_state)
                           captured_piece_symbol));
     game_state->last_moved_piece = game_state->selected_piece->symbol;
 
+    // Attack map updates the selected piece, but it is always the same color as
+    // for which team we are making a move
     calculate_attack_map(game_state);
+
+    // Pinned pieces does not change game state
+    // Pinned pieces can only move along the direction from which they are pinned
     calculate_pinned_pieces(game_state);
+
+    // Is check does not update game state
     is_check(game_state);
 
-    // Calculate pinned pieces for other color by position -> these can't move
-    // next move
+    // Is double check? If so, check can only be countered by moving king
 
-    // Is double check? Checken Check diagonal/horizontal line from
-    // which check is generated. If so, check can either be countered by moving
-    // on this line (or moving king)
 
     // Check by pawn / knight -> only stoppable by
     // capturing said pawn/knight (or moving king)
