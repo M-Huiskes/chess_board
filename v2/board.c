@@ -116,6 +116,7 @@ void init_team_state(TeamState *team_state, char color)
     team_state->long_castle_allowed = 1;
     team_state->attack_map = (uint64_t) 0;
     // team_state->pin_info = malloc(8 * sizeof(PinnedInfo));
+    team_state->count_pinned_pieces = 0;
     init_pieces(team_state->pieces, color);
 }
 
@@ -294,6 +295,22 @@ void is_check(GameState *game_state)
     }
 }
 
+int validate_direction_valid(int direction, int old_pos, int new_pos)
+{
+    if (abs(direction) == 1) {
+        return check_horizontal_move(old_pos, new_pos);
+    }
+    if (abs(direction) == 7 || abs(direction) == 9) {
+        return check_diag_move(old_pos, new_pos);
+    }
+
+    if (abs(direction) == 8) {
+        return check_vertical_move(new_pos);
+    }
+
+    return 0;
+}
+
 void calculate_pinned_pieces(GameState *game_state)
 {
     char color_playing = game_state->selected_piece->color;
@@ -303,23 +320,24 @@ void calculate_pinned_pieces(GameState *game_state)
     int king_position = get_lowest_bit_index(enemy_king.pos_bb);
     uint64_t full_board = get_full_bit_board(&(game_state->board));
     int count_pinned_pieces = 0;
-    printf("reached here!\n§");
     // TODO: Check if I can reuse find_diagonal_moves for this, shares the
     // same functionality
-    int diagonal_moves[4] = {7, 9, -7, -9};
-    for (int i = 0; i < 4; i++) {
-        int next_pos = king_position + diagonal_moves[i];
+    int directions[8] = {7, 9, -7, -9, -1, 1, 8, -8};
+    for (int i = 0; i < 8; i++) {
+        int next_pos = king_position + directions[i];
         int old_pos = king_position;
         int one_friendly_piece = 0;
-        printf("Loop number %d\n", i);
-        while (check_diag_move(old_pos, next_pos)) {
+        int pinned_piece_pos;
+
+        while (validate_direction_valid(directions[i], old_pos, next_pos)) {
             if (is_bit_set(full_board, next_pos)) {
                 if (!(is_enemy(enemy_king.color, next_pos,
                                &(game_state->board)))) {
                     if (!(one_friendly_piece)) {
                         one_friendly_piece = 1;
+                        pinned_piece_pos = next_pos;
                     } else {
-                        one_friendly_piece = 0;
+                        break;
                     }
                 }
                 if (is_enemy(enemy_king.color, next_pos,
@@ -328,32 +346,37 @@ void calculate_pinned_pieces(GameState *game_state)
                         get_piece_by_position(next_pos, &(game_state->board));
 
                     if (piece == NULL) {
+                        old_pos = next_pos;
+                        next_pos = old_pos + directions[i];
                         continue;
                     }
                     if ((tolower(piece->symbol) == 'q' ||
-                         tolower(piece->symbol) == 'b') &&
+                         (tolower(piece->symbol) == 'b' &&
+                          (abs(directions[i]) == 7 ||
+                               abs(directions[i]) == 9)) ||
+                         (tolower(piece->symbol) == 'r' &&
+                          (abs(directions[i]) == 1 ||
+                               abs(directions[i]) == 8))) &&
                         one_friendly_piece) {
                         PinnedInfo pin_info = {
-                            .bit_position = next_pos,
-                            .direction = diagonal_moves[i],
+                            .bit_position = pinned_piece_pos,
+                            .direction = directions[i],
                         };
                         // team_state.pin_info[count_pinned_pieces] = pin_info;
                         count_pinned_pieces++;
-                        printf("Found pinned piece!!!\n");
+                        printf("Found pinned piece at position: %d!!!\n",
+                               pinned_piece_pos);
+                        break;
+                    } else {
+                        break;
                     }
                 }
             }
             old_pos = next_pos;
-            next_pos = old_pos + diagonal_moves[i];
+            next_pos = old_pos + directions[i];
         }
     }
-    printf("Number of pinned pieces %d\n", count_pinned_pieces);
-
-    // TODO: Check if I can reuse find_horizontal_moves for this, shares the
-    // same functionality
-    // int directions[4] = {-1, 8, 1, -8};
-    // for (int i = 0; i < 4; i++) {
-    // }
+    team_state.count_pinned_pieces = count_pinned_pieces;
 }
 
 void make_move(GameState *game_state)

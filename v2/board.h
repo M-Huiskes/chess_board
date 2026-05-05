@@ -12,6 +12,7 @@ typedef struct {
     Piece pieces[6];
     uint64_t attack_map;
     // PinnedInfo *pin_info;
+    int count_pinned_pieces;
     int short_castle_allowed;
     int long_castle_allowed;
 } TeamState;
