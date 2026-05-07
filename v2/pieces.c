@@ -4,10 +4,12 @@
 #include "board.h"
 #include "state.h"
 
+#include <ctype.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 const uint64_t START_WHITE_PAWNS = 0x000000000000FF00ULL;
 const uint64_t START_BLACK_PAWNS = 0x00FF000000000000ULL;
@@ -69,14 +71,16 @@ void init_pieces(Piece team[6], char color)
     }
 }
 
-TeamState get_team_state_by_color(GameState *game_state, char color)
+TeamState *get_team_state_by_color(GameState *game_state, char color)
 {
-    return color == 'w' ? game_state->board.white : game_state->board.black;
+    return color == 'w' ? &(game_state->board.white)
+                        : &(game_state->board.black);
 }
 
-TeamState get_enemy_team_state(GameState *game_state, char color)
+TeamState *get_enemy_team_state(GameState *game_state, char color)
 {
-    return color == 'w' ? game_state->board.black : game_state->board.white;
+    return color == 'w' ? get_team_state_by_color(game_state, 'b')
+                        : get_team_state_by_color(game_state, 'w');
 }
 
 int get_direction_pawn_move(int position, char color, int increment)
@@ -338,8 +342,8 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
     find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
 
     // Prevent moving in check
-    TeamState enemy_team = get_enemy_team_state(game_state, color_moving);
-    uint64_t enemy_attack_map = enemy_team.attack_map;
+    TeamState *enemy_team = get_enemy_team_state(game_state, color_moving);
+    uint64_t enemy_attack_map = enemy_team->attack_map;
 
     possible_moves = possible_moves & ~enemy_attack_map;
 
@@ -347,8 +351,73 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
     return possible_moves;
 }
 
+uint64_t calculate_pinned_piece_moves(GameState *game_state,
+                                      TeamState *team_state, int pinned_index)
+{
+    printf("selected pinned piece!\n");
+    uint64_t possible_moves = (uint64_t) 0;
+
+    char selected_piece = tolower(game_state->selected_piece->symbol);
+    if (selected_piece == 'n') {
+        return possible_moves;
+    }
+
+    PinnedInfo pin_info = team_state->pin_info[pinned_index];
+    int direction = pin_info.direction;
+    // Rook pinned diagonally, no possible moves
+    if (selected_piece == 'r' &&
+        (abs(pin_info.direction) == 7 || abs(pin_info.direction) == 9)) {
+        return possible_moves;
+    }
+    if (selected_piece == 'b' &&
+        (abs(pin_info.direction) == 8 || abs(pin_info.direction) == 1)) {
+        return possible_moves;
+    }
+
+    int possible_move_pos = game_state->bit_position + direction;
+    int count = 1;
+    while (count <= 8) {
+
+        if (selected_piece == 'p' && count == 1) {
+            if (possible_move_pos == pin_info.pinner_position) {
+                set_bit(&possible_moves, possible_move_pos);
+            }
+            break;
+        }
+        set_bit(&possible_moves, possible_move_pos);
+        if (possible_move_pos == pin_info.pinner_position) {
+            break;
+        }
+        possible_move_pos = possible_move_pos + direction;
+        count++;
+    }
+    print_bitboard(possible_moves);
+    return possible_move_pos;
+}
+
 uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
 {
+    TeamState *team_state =
+        get_team_state_by_color(game_state, game_state->selected_piece->color);
+
+    if (team_state->count_pinned_pieces > 0) {
+        int pinned_piece_selected = 0;
+        int pinned_piece_index = 1;
+        for (int i = 0; i < team_state->count_pinned_pieces; i++) {
+            if (game_state->bit_position ==
+                team_state->pin_info[i].pinned_position) {
+                pinned_piece_selected = 1;
+                pinned_piece_index = i;
+                break;
+            }
+        }
+        if (pinned_piece_selected) {
+            printf("reached pinnedpiec \n");
+            return calculate_pinned_piece_moves(game_state, team_state,
+                                                pinned_piece_index);
+        }
+    }
+
     uint64_t full_board = get_full_bit_board(&(game_state->board));
     uint64_t possible_moves;
 

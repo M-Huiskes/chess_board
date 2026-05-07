@@ -4,14 +4,15 @@
 #include "pieces.h"
 
 typedef struct {
-    int bit_position;
+    int pinned_position;
+    int pinner_position;
     int direction;
 } PinnedInfo;
 
 typedef struct {
     Piece pieces[6];
     uint64_t attack_map;
-    // PinnedInfo *pin_info;
+    PinnedInfo *pin_info;
     int count_pinned_pieces;
     int short_castle_allowed;
     int long_castle_allowed;

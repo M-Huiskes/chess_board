@@ -115,7 +115,7 @@ void init_team_state(TeamState *team_state, char color)
     team_state->short_castle_allowed = 1;
     team_state->long_castle_allowed = 1;
     team_state->attack_map = (uint64_t) 0;
-    // team_state->pin_info = malloc(8 * sizeof(PinnedInfo));
+    team_state->pin_info = malloc(8 * sizeof(PinnedInfo));
     team_state->count_pinned_pieces = 0;
     init_pieces(team_state->pieces, color);
 }
@@ -314,9 +314,9 @@ int validate_direction_valid(int direction, int old_pos, int new_pos)
 void calculate_pinned_pieces(GameState *game_state)
 {
     char color_playing = game_state->selected_piece->color;
-    TeamState team_state = color_playing == 'w' ? game_state->board.black
-                                                : game_state->board.white;
-    Piece enemy_king = team_state.pieces[KING_ARRAY_INDEX];
+    TeamState *team_state = color_playing == 'w' ? &(game_state->board.black)
+                                                 : &(game_state->board.white);
+    Piece enemy_king = team_state->pieces[KING_ARRAY_INDEX];
     int king_position = get_lowest_bit_index(enemy_king.pos_bb);
     uint64_t full_board = get_full_bit_board(&(game_state->board));
     int count_pinned_pieces = 0;
@@ -359,10 +359,11 @@ void calculate_pinned_pieces(GameState *game_state)
                            abs(directions[i]) == 8))) &&
                         one_friendly_piece) {
                         PinnedInfo pin_info = {
-                            .bit_position = pinned_piece_pos,
+                            .pinned_position = pinned_piece_pos,
+                            .pinner_position = next_pos,
                             .direction = directions[i],
                         };
-                        // team_state.pin_info[count_pinned_pieces] = pin_info;
+                        team_state->pin_info[count_pinned_pieces] = pin_info;
                         count_pinned_pieces++;
                         printf("Found pinned piece at position: %d!!!\n",
                                pinned_piece_pos);
@@ -376,7 +377,7 @@ void calculate_pinned_pieces(GameState *game_state)
             next_pos = old_pos + directions[i];
         }
     }
-    team_state.count_pinned_pieces = count_pinned_pieces;
+    team_state->count_pinned_pieces = count_pinned_pieces;
 }
 
 void make_move(GameState *game_state)
@@ -417,14 +418,14 @@ void make_move(GameState *game_state)
     calculate_attack_map(game_state);
 
     // Pinned pieces does not change game state
-    // Pinned pieces can only move along the direction from which they are pinned
+    // Pinned pieces can only move along the direction from which they are
+    // pinned
     calculate_pinned_pieces(game_state);
 
     // Is check does not update game state
     is_check(game_state);
 
     // Is double check? If so, check can only be countered by moving king
-
 
     // Check by pawn / knight -> only stoppable by
     // capturing said pawn/knight (or moving king)
