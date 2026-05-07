@@ -390,6 +390,8 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
     return possible_moves;
 }
 
+uint64_t validate_moves_in_check(GameState *game_state) {}
+
 uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
 {
     TeamState *team_state =
