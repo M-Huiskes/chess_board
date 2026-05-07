@@ -24,25 +24,6 @@ const uint64_t START_BLACK_QUEEN = 0x1000000000000000ULL;
 const uint64_t START_WHITE_KING = 0x0000000000000008ULL;
 const uint64_t START_BLACK_KING = 0x0800000000000000ULL;
 
-static void print_bitboard(uint64_t bitboard)
-{
-    for (int rank = 7; rank >= 0; rank--) {
-        printf("%d |", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int sq = rank * 8 + file;
-            uint64_t mask = (uint64_t) 1 << sq;
-
-            if (bitboard & mask)
-                printf("x");
-            else
-                printf(".");
-        }
-        printf("\n");
-    }
-    printf("   --------\n");
-    printf("   abcdefgh\n");
-}
-
 void init_pieces(Piece team[6], char color)
 {
     uint64_t start_positions[] = {
@@ -354,7 +335,6 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
 uint64_t calculate_pinned_piece_moves(GameState *game_state,
                                       TeamState *team_state, int pinned_index)
 {
-    printf("selected pinned piece!\n");
     uint64_t possible_moves = (uint64_t) 0;
 
     char selected_piece = tolower(game_state->selected_piece->symbol);
@@ -391,8 +371,7 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
         possible_move_pos = possible_move_pos + direction;
         count++;
     }
-    print_bitboard(possible_moves);
-    return possible_move_pos;
+    return possible_moves;
 }
 
 uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
@@ -412,9 +391,9 @@ uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
             }
         }
         if (pinned_piece_selected) {
-            printf("reached pinnedpiec \n");
-            return calculate_pinned_piece_moves(game_state, team_state,
-                                                pinned_piece_index);
+            uint64_t possible_moves = calculate_pinned_piece_moves(
+                game_state, team_state, pinned_piece_index);
+            return possible_moves;
         }
     }
 

@@ -127,7 +127,8 @@ void static process_user_input(SDL_Event event, GameState *game_state)
     game_state->bit_position = position;
     game_state->selected_piece = selected_piece;
     game_state->output_position = 0;
-    game_state->possible_moves = find_possible_moves(game_state, attack_moves_only);
+    game_state->possible_moves =
+        find_possible_moves(game_state, attack_moves_only);
 }
 
 const char *get_image_path(char symbol)

@@ -214,7 +214,7 @@ int handle_promotion_move(GameState *game_state, int output_position,
     return move_type;
 }
 
-static void print_bitboard(uint64_t bitboard)
+void print_bitboard(uint64_t bitboard)
 {
     for (int rank = 7; rank >= 0; rank--) {
         printf("%d |", rank + 1);
@@ -260,8 +260,6 @@ void calculate_attack_map(GameState *game_state)
             game_state->selected_square = square_from_position(position);
             uint64_t possible_moves =
                 find_possible_moves(game_state, attack_moves_only);
-            // TODO: For pawns this is not correct, only check the sqaures they
-            // attack!
             attack_map |= possible_moves;
             piece_bb &= piece_bb - 1;
         }
