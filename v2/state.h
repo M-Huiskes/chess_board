@@ -33,6 +33,12 @@ typedef struct {
     int capacity;
 } MoveHistory;
 
+typedef struct {
+    int is_check;
+    char check_by;
+    int double_check;
+} CheckInfo;
+
 typedef struct GameState {
     BoardState board;
     Piece *selected_piece;
@@ -45,7 +51,7 @@ typedef struct GameState {
     int output_position;
     uint64_t possible_moves;
     int awaiting_promotion;
-    int is_check;
+    CheckInfo check_info;
 } GameState;
 
 GameState init_game_state();

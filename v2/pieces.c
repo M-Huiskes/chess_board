@@ -448,5 +448,11 @@ uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
         break;
     }
 
+    if (game_state->check_info.is_check) {
+        printf("Check by following piece %c, is double check? %d \n",
+               game_state->check_info.check_by,
+               game_state->check_info.double_check);
+    }
+
     return possible_moves;
 }
