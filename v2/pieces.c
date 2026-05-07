@@ -333,7 +333,8 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
 }
 
 uint64_t calculate_pinned_piece_moves(GameState *game_state,
-                                      TeamState *team_state, int pinned_index)
+                                      TeamState *team_state, int pinned_index,
+                                      uint64_t full_board)
 {
     uint64_t possible_moves = (uint64_t) 0;
 
@@ -358,9 +359,24 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
     int count = 1;
     while (count <= 8) {
 
-        if (selected_piece == 'p' && count == 1) {
-            if (possible_move_pos == pin_info.pinner_position) {
+        if (selected_piece == 'p') {
+            if (possible_move_pos == pin_info.pinner_position && count == 1 &&
+                (abs(direction) == 7 || abs(direction) == 9)) {
                 set_bit(&possible_moves, possible_move_pos);
+                break;
+            }
+            if (abs(direction) == 8 &&
+                !(is_bit_set(full_board, possible_move_pos))) {
+                set_bit(&possible_moves, possible_move_pos);
+
+                if ((game_state->selected_piece->color == 'w' &&
+                     game_state->bit_position / 8 == 1) ||
+                    (game_state->selected_piece->color == 'b' &&
+                     game_state->bit_position / 8 == 6)) {
+                    set_bit(&possible_moves, possible_move_pos + 8);
+                }
+
+                break;
             }
             break;
         }
@@ -379,6 +395,7 @@ uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
     TeamState *team_state =
         get_team_state_by_color(game_state, game_state->selected_piece->color);
 
+    uint64_t full_board = get_full_bit_board(&(game_state->board));
     if (team_state->count_pinned_pieces > 0) {
         int pinned_piece_selected = 0;
         int pinned_piece_index = 1;
@@ -392,12 +409,11 @@ uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
         }
         if (pinned_piece_selected) {
             uint64_t possible_moves = calculate_pinned_piece_moves(
-                game_state, team_state, pinned_piece_index);
+                game_state, team_state, pinned_piece_index, full_board);
             return possible_moves;
         }
     }
 
-    uint64_t full_board = get_full_bit_board(&(game_state->board));
     uint64_t possible_moves;
 
     switch (game_state->selected_piece->symbol) {
