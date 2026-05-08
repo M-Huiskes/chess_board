@@ -439,17 +439,17 @@ void update_castling_state(GameState *game_state, char color)
 
     int selected_pos = game_state->bit_position;
     if (color == 'b') {
-        if (selected_pos == BLACK_LEFT_ROOK) {
+        if (selected_pos == BLACK_LEFT_ROOK_START) {
             team_state->long_castle_allowed = 0;
         }
-        if (selected_pos == BLACK_RIGHT_ROOK) {
+        if (selected_pos == BLACK_RIGHT_ROOK_START) {
             team_state->short_castle_allowed = 0;
         }
     } else {
-        if (selected_pos == WHITE_LEFT_ROOK) {
+        if (selected_pos == WHITE_LEFT_ROOK_START) {
             team_state->long_castle_allowed = 0;
         }
-        if (selected_pos == WHITE_RIGHT_ROOK) {
+        if (selected_pos == WHITE_RIGHT_ROOK_START) {
             team_state->short_castle_allowed = 0;
         }
     }

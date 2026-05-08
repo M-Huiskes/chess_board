@@ -3,14 +3,14 @@
 
 #define KING_ARRAY_INDEX 5
 
-#define WHITE_LEFT_ROOK 0
-#define WHITE_RIGHT_ROOK 7
+#define WHITE_LEFT_ROOK_START 0
+#define WHITE_RIGHT_ROOK_START 7
 
-#define BLACK_LEFT_ROOK 56
-#define BLACK_RIGHT_ROOK 63
+#define BLACK_LEFT_ROOK_START 56
+#define BLACK_RIGHT_ROOK_START 63
 
-#define WHITE_KING 4
-#define BLACK_KING 60
+#define WHITE_KING_START 4
+#define BLACK_KING_START 60
 
 #include <stdint.h>
 
@@ -31,8 +31,8 @@ const extern uint64_t START_BLACK_BISHOPS;
 const extern uint64_t START_WHITE_QUEEN;
 const extern uint64_t START_BLACK_QUEEN;
 
-const extern uint64_t START_WHITE_KING;
-const extern uint64_t START_BLACK_KING;
+const extern uint64_t START_WHITE_KING_START;
+const extern uint64_t START_BLACK_KING_START;
 
 typedef struct {
     uint64_t pos_bb;

@@ -21,8 +21,8 @@ const uint64_t START_WHITE_BISHOPS = 0x0000000000000024ULL;
 const uint64_t START_BLACK_BISHOPS = 0x2400000000000000ULL;
 const uint64_t START_WHITE_QUEEN = 0x0000000000000010ULL;
 const uint64_t START_BLACK_QUEEN = 0x1000000000000000ULL;
-const uint64_t START_WHITE_KING = 0x0000000000000008ULL;
-const uint64_t START_BLACK_KING = 0x0800000000000000ULL;
+const uint64_t START_WHITE_KING_START = 0x0000000000000008ULL;
+const uint64_t START_BLACK_KING_START = 0x0800000000000000ULL;
 
 void init_pieces(Piece team[6], char color)
 {
@@ -31,7 +31,7 @@ void init_pieces(Piece team[6], char color)
         color == 'w' ? START_WHITE_ROOKS : START_BLACK_ROOKS,
         color == 'w' ? START_WHITE_KNIGHTS : START_BLACK_KNIGHTS,
         color == 'w' ? START_WHITE_BISHOPS : START_BLACK_BISHOPS,
-        color == 'w' ? START_WHITE_KING : START_BLACK_KING,
+        color == 'w' ? START_WHITE_KING_START : START_BLACK_KING_START,
         color == 'w' ? START_WHITE_QUEEN : START_BLACK_QUEEN,
     };
     char *symbols;
@@ -311,6 +311,22 @@ uint64_t find_possible_knight_moves(GameState *game_state, uint64_t full_board)
     return possible_moves;
 }
 
+int validate_castle_move(int king_pos, int rook_pos, int direction,
+                         uint64_t full_board, uint64_t enemy_attack_map)
+{
+    int next_pos = king_pos + direction;
+    int count = 0;
+    while (next_pos != rook_pos && count < 8) {
+        if (is_bit_set(full_board, next_pos) ||
+            is_bit_set(enemy_attack_map, next_pos)) {
+            return 0;
+        }
+        count++;
+        next_pos = next_pos + direction;
+    }
+    return 1;
+}
+
 uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
 {
     Piece *piece = game_state->selected_piece;
@@ -329,6 +345,40 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
     possible_moves = possible_moves & ~enemy_attack_map;
 
     // Castling
+    TeamState *team_state = get_team_state_by_color(game_state, color_moving);
+    if (!(game_state->check_info.is_check)) {
+        int can_castle_short = 0;
+        int can_castle_long = 0;
+
+        int king_pos =
+            color_moving == 'w' ? WHITE_KING_START : BLACK_KING_START;
+
+        if (team_state->short_castle_allowed) {
+            int rook_pos_short = color_moving == 'w' ? WHITE_RIGHT_ROOK_START
+                                                     : BLACK_RIGHT_ROOK_START;
+            int direction = 1;
+            can_castle_short =
+                validate_castle_move(king_pos, rook_pos_short, direction,
+                                     full_board, enemy_attack_map);
+        }
+
+        if (team_state->long_castle_allowed) {
+            int rook_pos_long = color_moving == 'w' ? WHITE_LEFT_ROOK_START
+                                                    : BLACK_LEFT_ROOK_START;
+            int direction = -1;
+            can_castle_long =
+                validate_castle_move(king_pos, rook_pos_long, direction,
+                                     full_board, enemy_attack_map);
+        }
+
+        if (can_castle_short) {
+            set_bit(&possible_moves, king_pos + 2);
+        }
+
+        if (can_castle_long) {
+            set_bit(&possible_moves, king_pos - 2);
+        }
+    }
     return possible_moves;
 }
 
