@@ -280,7 +280,6 @@ uint64_t calculate_attack_map(GameState *game_state, char color_playing,
         if (color_playing == 'b' && i < 6) {
             continue;
         }
-        printf("Running for index %d\n", i);
         Piece *piece = get_piece_by_index(i, &(game_state->board));
         // Loop over each piece and each position where this piece is
         uint64_t piece_bb = piece->pos_bb;
@@ -293,7 +292,6 @@ uint64_t calculate_attack_map(GameState *game_state, char color_playing,
             game_state->selected_square = square_from_position(position);
             uint64_t possible_moves =
                 find_possible_moves(game_state, attack_moves_only);
-            print_bitboard(possible_moves);
 
             // Check whether enemy king is attacked in possible moves
             if (run_check_info) {
@@ -304,7 +302,6 @@ uint64_t calculate_attack_map(GameState *game_state, char color_playing,
             piece_bb &= piece_bb - 1;
         }
     }
-    print_bitboard(attack_map);
     return attack_map;
 }
 
@@ -405,23 +402,19 @@ void validate_check_fixed(GameState *game_state)
     } else {
         king = game_state->board.black.pieces[KING_ARRAY_INDEX];
         attack_map = calculate_attack_map(game_state, 'w', run_check_info);
-    }
-    printf("Attack map and king position bb with color playing: %c\n",
-           color_playing);
-    print_bitboard(attack_map);
-    print_bitboard(king.pos_bb);
 
-    if (king.pos_bb & attack_map) {
-        printf("Check not fixed after move");
-        exit(EXIT_FAILURE);
-    }
+        if (king.pos_bb & attack_map) {
+            printf("Check not fixed after move");
+            exit(EXIT_FAILURE);
+        }
 
-    game_state->check_info = (CheckInfo){
-        .check_by = '0',
-        .is_check = 0,
-        .is_double_check = 0,
-        .position_check = -1,
-    };
+        game_state->check_info = (CheckInfo){
+            .check_by = '0',
+            .is_check = 0,
+            .is_double_check = 0,
+            .position_check = -1,
+        };
+    }
 }
 
 void make_move(GameState *game_state)

@@ -406,12 +406,11 @@ uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
         return validated_moves;
     }
 
-    // Pawn and knight checks are only solved by capturing the piece or moving
-    // king
-
     char check_by = tolower(check_info.check_by);
     int check_from_position = check_info.position_check;
 
+    // Pawn and knight checks are only solved by capturing the piece or moving
+    // king
     if (check_by == 'p' || check_by == 'n') {
         while (possible_moves) {
             int position = get_lowest_bit_index(possible_moves);
@@ -421,6 +420,32 @@ uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
             }
 
             possible_moves &= possible_moves - 1;
+        }
+    } else {
+        TeamState *team_state = get_team_state_by_color(
+            game_state, game_state->selected_piece->color);
+        int king_pos =
+            get_lowest_bit_index(team_state->pieces[KING_ARRAY_INDEX].pos_bb);
+
+        // Check direction 1 last, as it will always result in true
+        float directions[4] = {7., 8., 9., 1.};
+        int check_in_direction;
+
+        for (int i = 0; i < 4; i++) {
+            int difference = check_from_position - king_pos;
+            float ratio = difference / directions[i];
+            printf("Ratio: %f, difference: %d, direction: %f", ratio,
+                   difference, directions[i]);
+            printf("%f \n", fmod(ratio, 1.0));
+
+            if (fmod(ratio, 1.0) == 0.0) {
+                if (ratio < 0) {
+                    check_in_direction = (int) directions[i];
+                } else {
+                    check_in_direction = -((int) directions[i]);
+                }
+                break;
+            }
         }
     }
     return validated_moves;
