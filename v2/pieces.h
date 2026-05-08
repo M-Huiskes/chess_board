@@ -1,6 +1,16 @@
 #ifndef PIECES_H
 #define PIECES_H
+
 #define KING_ARRAY_INDEX 5
+
+#define WHITE_LEFT_ROOK 0
+#define WHITE_RIGHT_ROOK 7
+
+#define BLACK_LEFT_ROOK 56
+#define BLACK_RIGHT_ROOK 63
+
+#define WHITE_KING 4
+#define BLACK_KING 60
 
 #include <stdint.h>
 
@@ -31,6 +41,21 @@ typedef struct {
     int value;
 } Piece;
 
+typedef struct {
+    int pinned_position;
+    int pinner_position;
+    int direction;
+} PinnedInfo;
+
+typedef struct {
+    Piece pieces[6];
+    uint64_t attack_map;
+    PinnedInfo *pin_info;
+    int count_pinned_pieces;
+    int short_castle_allowed;
+    int long_castle_allowed;
+} TeamState;
+
 void init_pieces(Piece team[6], char color);
 uint64_t find_possible_moves(GameState *game_state, int attack_moves_only);
 uint64_t validate_moves_in_check(GameState *game_state,
@@ -38,5 +63,6 @@ uint64_t validate_moves_in_check(GameState *game_state,
 int check_diag_move(int position, int next_pos);
 int check_vertical_move(int next_pos);
 int check_horizontal_move(int position, int next_pos);
+TeamState *get_team_state_by_color(GameState *game_state, char color);
 
 #endif

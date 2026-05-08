@@ -417,6 +417,44 @@ void validate_check_fixed(GameState *game_state)
     }
 }
 
+void update_castling_state(GameState *game_state, char color)
+{
+    TeamState *team_state = get_team_state_by_color(game_state, color);
+    char selected_piece = tolower(game_state->selected_piece->symbol);
+
+    if (!(team_state->long_castle_allowed) &&
+        !(team_state->short_castle_allowed)) {
+        return;
+    }
+
+    if (selected_piece != 'k' && selected_piece != 'r') {
+        return;
+    }
+
+    if (selected_piece == 'k') {
+        team_state->short_castle_allowed = 0;
+        team_state->long_castle_allowed = 0;
+        return;
+    }
+
+    int selected_pos = game_state->bit_position;
+    if (color == 'b') {
+        if (selected_pos == BLACK_LEFT_ROOK) {
+            team_state->long_castle_allowed = 0;
+        }
+        if (selected_pos == BLACK_RIGHT_ROOK) {
+            team_state->short_castle_allowed = 0;
+        }
+    } else {
+        if (selected_pos == WHITE_LEFT_ROOK) {
+            team_state->long_castle_allowed = 0;
+        }
+        if (selected_pos == WHITE_RIGHT_ROOK) {
+            team_state->short_castle_allowed = 0;
+        }
+    }
+}
+
 void make_move(GameState *game_state)
 {
     int is_check_initially = game_state->check_info.is_check;
@@ -425,6 +463,8 @@ void make_move(GameState *game_state)
     int move_type = QUIET;
     char captured_piece_symbol = '0';
     char color_playing = game_state->selected_piece->color;
+
+    update_castling_state(game_state, color_playing);
 
     Piece *other_piece =
         get_piece_by_position(output_position, &(game_state->board));
