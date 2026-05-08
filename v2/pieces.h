@@ -33,6 +33,8 @@ typedef struct {
 
 void init_pieces(Piece team[6], char color);
 uint64_t find_possible_moves(GameState *game_state, int attack_moves_only);
+uint64_t validate_moves_in_check(GameState *game_state,
+                                 uint64_t possible_moves);
 int check_diag_move(int position, int next_pos);
 int check_vertical_move(int next_pos);
 int check_horizontal_move(int position, int next_pos);

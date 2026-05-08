@@ -484,9 +484,5 @@ uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
         break;
     }
 
-    if (game_state->check_info.is_check) {
-        possible_moves = validate_moves_in_check(game_state, possible_moves);
-    }
-
     return possible_moves;
 }
