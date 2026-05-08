@@ -430,13 +430,10 @@ uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
         // Check direction 1 last, as it will always result in true
         float directions[4] = {7., 8., 9., 1.};
         int check_in_direction;
+        int difference = check_from_position - king_pos;
 
         for (int i = 0; i < 4; i++) {
-            int difference = check_from_position - king_pos;
             float ratio = difference / directions[i];
-            printf("Ratio: %f, difference: %d, direction: %f", ratio,
-                   difference, directions[i]);
-            printf("%f \n", fmod(ratio, 1.0));
 
             if (fmod(ratio, 1.0) == 0.0) {
                 if (ratio < 0) {
@@ -446,6 +443,18 @@ uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
                 }
                 break;
             }
+        }
+
+        int next_pos = check_from_position;
+        int count = 0;
+
+        // Add count condition, to avoid infinte loop
+        while (next_pos != king_pos && count < 8) {
+            if (is_bit_set(possible_moves, next_pos)) {
+                set_bit(&validated_moves, next_pos);
+            }
+            next_pos = next_pos + check_in_direction;
+            count++;
         }
     }
     return validated_moves;
