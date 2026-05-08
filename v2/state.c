@@ -54,20 +54,22 @@ MoveHistory init_move_history(void)
 
 GameState init_game_state(void)
 {
-    GameState game_state = {
-        .board = init_board(),
-        .selected_piece = NULL,
-        .selected_square = {-1, -1},
-        .bit_position = -1,
-        .move_history = init_move_history(),
-        .last_moved_piece = '0',
-        .en_passant_possible = 0,
-        .promote_to = '0',
-        .output_position = 0,
-        .possible_moves = (uint64_t) 0,
-        .awaiting_promotion = 0,
-        .is_check = 0,
-    };
+    GameState game_state = {.board = init_board(),
+                            .selected_piece = NULL,
+                            .selected_square = {-1, -1},
+                            .bit_position = -1,
+                            .move_history = init_move_history(),
+                            .last_moved_piece = '0',
+                            .en_passant_possible = 0,
+                            .promote_to = '0',
+                            .output_position = 0,
+                            .possible_moves = (uint64_t) 0,
+                            .awaiting_promotion = 0,
+                            .check_info = (CheckInfo){
+                                .is_check = 0,
+                                .double_check = 0,
+                                .check_by = '0',
+                            }};
 
     return game_state;
 }

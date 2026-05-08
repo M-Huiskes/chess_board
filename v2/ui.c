@@ -382,7 +382,7 @@ void static render_board(SDL_Renderer *renderer, GameState *game_state)
     if (game_state->awaiting_promotion) {
         render_promotion(renderer, game_state);
     }
-    if (game_state->is_check) {
+    if (game_state->check_info.is_check) {
         render_check(renderer, game_state);
     }
     SDL_RenderPresent(renderer);

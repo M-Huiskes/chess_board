@@ -264,9 +264,10 @@ void determine_check_info(GameState *game_state, uint64_t possible_moves)
     }
 }
 
-uint64_t calculate_attack_map(GameState *game_state, char color_playing)
+void calculate_attack_map(GameState *game_state)
 {
     int attack_moves_only = 1;
+    char color_playing = game_state->selected_piece->color;
 
     uint64_t attack_map = (uint64_t) 0;
     // TODO: Make this faster by incrementally updating attack map (based on
@@ -299,7 +300,11 @@ uint64_t calculate_attack_map(GameState *game_state, char color_playing)
         }
     }
 
-    return attack_map;
+    if (color_playing == 'w') {
+        game_state->board.white.attack_map = attack_map;
+    } else {
+        game_state->board.black.attack_map = attack_map;
+    }
 }
 
 int validate_direction_valid(int direction, int old_pos, int new_pos)
@@ -387,28 +392,28 @@ void calculate_pinned_pieces(GameState *game_state)
     team_state->count_pinned_pieces = count_pinned_pieces;
 }
 
-int validate_check_fixed(GameState *game_state)
-{
-    char color_playing = game_state->selected_piece->color;
+// int validate_check_fixed(GameState *game_state)
+// {
+//     char color_playing = game_state->selected_piece->color;
 
-    Piece king;
-    uint64_t attack_map;
+//     Piece king;
+//     uint64_t attack_map;
 
-    if (color_playing == 'w') {
-        king = game_state->board.white.pieces[KING_ARRAY_INDEX];
-        attack_map = calculate_attack_map(game_state, 'b');
-    } else {
-        king = game_state->board.black.pieces[KING_ARRAY_INDEX];
-        attack_map = calculate_attack_map(game_state, 'w');
-    }
+//     if (color_playing == 'w') {
+//         king = game_state->board.white.pieces[KING_ARRAY_INDEX];
+//         attack_map = calculate_attack_map(game_state, 'b');
+//     } else {
+//         king = game_state->board.black.pieces[KING_ARRAY_INDEX];
+//         attack_map = calculate_attack_map(game_state, 'w');
+//     }
 
-    if (king.pos_bb & attack_map) {
-        printf("Check not fixed after move");
-        exit(EXIT_FAILURE);
-    }
+//     if (king.pos_bb & attack_map) {
+//         printf("Check not fixed after move");
+//         exit(EXIT_FAILURE);
+//     }
 
-    return 1;
-}
+//     return 1;
+// }
 
 void make_move(GameState *game_state)
 {
@@ -446,15 +451,8 @@ void make_move(GameState *game_state)
 
     // Attack map updates the selected piece, but it is always the same color as
     // for which team we are making a move
-    // This also determines check info
-    uint64_t attack_map =
-        calculate_attack_map(game_state, game_state->selected_piece->color);
-
-    if (game_state->selected_piece->color == 'w') {
-        game_state->board.white.attack_map = attack_map;
-    } else {
-        game_state->board.black.attack_map = attack_map;
-    }
+    // This also determines check info!
+    calculate_attack_map(game_state);
 
     // Pinned pieces does not change game state
     // Pinned pieces can only move along the direction from which they are
@@ -467,13 +465,13 @@ void make_move(GameState *game_state)
     // capturing said pawn/knight (or moving king)
 
     // Validate whether check has been fixed after making move
-    // TODO: This is not necessary I think, just check if game state is check is true or not
-    // It should already be validated by calculate_attack_map
     if (is_check_initially) {
-        validate_check_fixed(game_state);
+        if (game_state->check_info.is_check) {
+            // After making a move, check should be fixed
+            exit(EXIT_FAILURE);
+        }
     }
 
     // TODO: Nog fixen dat als koning schaak staat door diagonaal / horizontaal
     // Dat dan squares achter attack ook niet beschikbaar zijn
-    
 }
