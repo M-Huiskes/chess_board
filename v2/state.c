@@ -67,8 +67,9 @@ GameState init_game_state(void)
                             .awaiting_promotion = 0,
                             .check_info = (CheckInfo){
                                 .is_check = 0,
-                                .double_check = 0,
+                                .is_double_check = 0,
                                 .check_by = '0',
+                                .position_check = 0,
                             }};
 
     return game_state;

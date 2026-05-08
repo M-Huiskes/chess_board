@@ -253,11 +253,12 @@ void determine_check_info(GameState *game_state, uint64_t possible_moves)
                 CheckInfo check_info = {
                     .is_check = 1,
                     .check_by = game_state->selected_piece->symbol,
-                    .double_check = 0,
+                    .is_double_check = 0,
+                    .position_check = game_state->bit_position,
                 };
                 game_state->check_info = check_info;
             } else {
-                game_state->check_info.double_check = 1;
+                game_state->check_info.is_double_check = 1;
             }
         }
         possible_moves &= possible_moves - 1;
@@ -392,28 +393,28 @@ void calculate_pinned_pieces(GameState *game_state)
     team_state->count_pinned_pieces = count_pinned_pieces;
 }
 
-// int validate_check_fixed(GameState *game_state)
-// {
-//     char color_playing = game_state->selected_piece->color;
+int validate_check_fixed(GameState *game_state)
+{
+    char color_playing = game_state->selected_piece->color;
 
-//     Piece king;
-//     uint64_t attack_map;
+    Piece king;
+    uint64_t attack_map;
 
-//     if (color_playing == 'w') {
-//         king = game_state->board.white.pieces[KING_ARRAY_INDEX];
-//         attack_map = calculate_attack_map(game_state, 'b');
-//     } else {
-//         king = game_state->board.black.pieces[KING_ARRAY_INDEX];
-//         attack_map = calculate_attack_map(game_state, 'w');
-//     }
+    if (color_playing == 'w') {
+        king = game_state->board.white.pieces[KING_ARRAY_INDEX];
+        attack_map = calculate_attack_map(game_state, 'b');
+    } else {
+        king = game_state->board.black.pieces[KING_ARRAY_INDEX];
+        attack_map = calculate_attack_map(game_state, 'w');
+    }
 
-//     if (king.pos_bb & attack_map) {
-//         printf("Check not fixed after move");
-//         exit(EXIT_FAILURE);
-//     }
+    if (king.pos_bb & attack_map) {
+        printf("Check not fixed after move");
+        exit(EXIT_FAILURE);
+    }
 
-//     return 1;
-// }
+    return 1;
+}
 
 void make_move(GameState *game_state)
 {
@@ -468,6 +469,7 @@ void make_move(GameState *game_state)
     if (is_check_initially) {
         if (game_state->check_info.is_check) {
             // After making a move, check should be fixed
+            printf("Still check after making move!\n");
             exit(EXIT_FAILURE);
         }
     }

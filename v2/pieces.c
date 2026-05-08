@@ -390,7 +390,41 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
     return possible_moves;
 }
 
-uint64_t validate_moves_in_check(GameState *game_state) {}
+uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
+{
+    uint64_t validated_moves = (uint64_t) 0;
+    CheckInfo check_info = game_state->check_info;
+    char selected_piece = tolower(game_state->selected_piece->symbol);
+
+    // King moves are generated already using the enemy attack map
+    // Not needed to further verify it's moves
+    if (selected_piece == 'k') {
+        return possible_moves;
+    }
+
+    if (check_info.is_double_check) {
+        return validated_moves;
+    }
+
+    // Pawn and knight checks are only solved by capturing the piece or moving
+    // king
+
+    char check_by = tolower(check_info.check_by);
+    int check_from_position = check_info.position_check;
+
+    if (check_by == 'p' || check_by == 'n') {
+        while (possible_moves) {
+            int position = get_lowest_bit_index(possible_moves);
+
+            if (position == check_from_position) {
+                set_bit(&validated_moves, position);
+            }
+
+            possible_moves &= possible_moves - 1;
+        }
+    }
+    return validated_moves;
+}
 
 uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
 {
@@ -451,9 +485,7 @@ uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
     }
 
     if (game_state->check_info.is_check) {
-        printf("Check by following piece %c, is double check? %d \n",
-               game_state->check_info.check_by,
-               game_state->check_info.double_check);
+        possible_moves = validate_moves_in_check(game_state, possible_moves);
     }
 
     return possible_moves;

@@ -36,7 +36,8 @@ typedef struct {
 typedef struct {
     int is_check;
     char check_by;
-    int double_check;
+    int is_double_check;
+    int position_check;
 } CheckInfo;
 
 typedef struct GameState {
