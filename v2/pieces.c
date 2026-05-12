@@ -318,7 +318,7 @@ int validate_castle_move(int king_pos, int rook_pos, int direction,
     int count = 0;
     while (next_pos != rook_pos && count < 8) {
         if (is_bit_set(full_board, next_pos) ||
-            is_bit_set(enemy_attack_map, next_pos)) {
+            (is_bit_set(enemy_attack_map, next_pos) && count < 2)) {
             return 0;
         }
         count++;
