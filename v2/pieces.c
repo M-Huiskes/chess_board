@@ -344,7 +344,7 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
 
     possible_moves = possible_moves & ~enemy_attack_map;
 
-    // Castling
+    // Castling, only when not in check
     TeamState *team_state = get_team_state_by_color(game_state, color_moving);
     if (!(game_state->check_info.is_check)) {
         int can_castle_short = 0;

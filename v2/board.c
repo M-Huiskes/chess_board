@@ -455,6 +455,38 @@ void update_castling_state(GameState *game_state, char color)
     }
 }
 
+int is_castling_move(GameState *game_state)
+{
+    if (tolower(game_state->selected_piece->symbol) != 'k') {
+        return 0;
+    }
+
+    char color_playing = game_state->selected_piece->color;
+    int king_position =
+        color_playing == 'w' ? WHITE_KING_START : BLACK_KING_START;
+    TeamState *team_state = get_team_state_by_color(game_state, color_playing);
+
+    if (game_state->output_position - king_position == -2 &&
+        team_state->long_castle_allowed) {
+
+        team_state->long_castle_allowed = 0;
+        team_state->short_castle_allowed = 0;
+
+        return CASTLE_QUEEN;
+    }
+
+    if (game_state->output_position - king_position == 2 &&
+        team_state->short_castle_allowed) {
+
+        team_state->long_castle_allowed = 0;
+        team_state->short_castle_allowed = 0;
+
+        return CASTLE_KING;
+    }
+
+    return 0;
+}
+
 void make_move(GameState *game_state)
 {
     int is_check_initially = game_state->check_info.is_check;
@@ -463,28 +495,60 @@ void make_move(GameState *game_state)
     int move_type = QUIET;
     char captured_piece_symbol = '0';
     char color_playing = game_state->selected_piece->color;
+    int is_castling = is_castling_move(game_state);
 
-    update_castling_state(game_state, color_playing);
-
-    Piece *other_piece =
-        get_piece_by_position(output_position, &(game_state->board));
-    if (other_piece != NULL) {
-        unset_bit(&(other_piece->pos_bb), output_position);
-        move_type = CAPTURE;
-        captured_piece_symbol = other_piece->symbol;
-    }
-
-    if (game_state->en_passant_possible && other_piece == NULL) {
-        move_type = handle_en_passant(game_state, output_position);
-        captured_piece_symbol = color_to_move(game_state) == 'w' ? 'p' : 'P';
-    }
-
-    unset_bit(&(game_state->selected_piece->pos_bb), input_position);
-    if (game_state->promote_to != '0') {
-        move_type =
-            handle_promotion_move(game_state, output_position, move_type);
-    } else {
+    if (is_castling) {
+        move_type = is_castling;
+        // Move the king
+        unset_bit(&(game_state->selected_piece->pos_bb), input_position);
         set_bit(&(game_state->selected_piece->pos_bb), output_position);
+
+        Piece *rook;
+        int rook_position;
+        int new_rook_position;
+
+        if (move_type == CASTLE_KING) {
+            rook_position = color_playing == 'w' ? WHITE_RIGHT_ROOK_START
+                                                 : BLACK_RIGHT_ROOK_START;
+            rook = get_piece_by_position(rook_position, &(game_state->board));
+            new_rook_position = output_position - 1;
+        }
+        if (move_type == CASTLE_QUEEN) {
+            rook_position = color_playing == 'w' ? WHITE_LEFT_ROOK_START
+                                                 : BLACK_LEFT_ROOK_START;
+            rook = get_piece_by_position(rook_position, &(game_state->board));
+            new_rook_position = output_position + 1;
+        }
+
+        // Move the rook
+        unset_bit(&(rook->pos_bb), rook_position);
+        set_bit(&(rook->pos_bb), new_rook_position);
+
+    } else {
+
+        update_castling_state(game_state, color_playing);
+
+        Piece *other_piece =
+            get_piece_by_position(output_position, &(game_state->board));
+        if (other_piece != NULL) {
+            unset_bit(&(other_piece->pos_bb), output_position);
+            move_type = CAPTURE;
+            captured_piece_symbol = other_piece->symbol;
+        }
+
+        if (game_state->en_passant_possible && other_piece == NULL) {
+            move_type = handle_en_passant(game_state, output_position);
+            captured_piece_symbol =
+                color_to_move(game_state) == 'w' ? 'p' : 'P';
+        }
+
+        unset_bit(&(game_state->selected_piece->pos_bb), input_position);
+        if (game_state->promote_to != '0') {
+            move_type =
+                handle_promotion_move(game_state, output_position, move_type);
+        } else {
+            set_bit(&(game_state->selected_piece->pos_bb), output_position);
+        }
     }
 
     push_move(&(game_state->move_history),
