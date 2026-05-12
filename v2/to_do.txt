@@ -4,6 +4,8 @@ TODO spel:
             (e2->e4, f7->f5, Q->e2, fxe4, Qxe4 -> pawn e7 heeft niet de goede zetten)
     - Fixen dat als koning schaak staat, dat squares in het verlengde van diagonaal / horizontaal ook niet geldig zijn
     - Fixen dat in de verdigde stukken op de een of andere manier opgeslagen worden -> defend_map?
+        - Of bit wel includen in attack_map als het een team stuk is
+    - Schaak state wordt niet altijd gefixt, soms na schaak voor zwart, slaan stuk die schaak zet -> volgende zet zwart schaak
 - Nog te implementeren
     - Schaakmat
     - Gelijkspel
@@ -12,6 +14,6 @@ TODO spel:
     - Castlen
         - Koning / toren niet bewogen ✅
         - Niet door schaak heen✅
-        - Possible moves goed generen
-            - Checkt nu voor alle plekken tussen koning en toren voor schaak
-                - moet alleen checken tot plek waar koning komt
+        - Possible moves goed generen✅
+            - Checkt nu voor alle plekken tussen koning en toren voor schaak✅
+                - moet alleen checken tot plek waar koning komt✅
