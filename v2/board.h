@@ -13,6 +13,12 @@ typedef struct {
     int row;
 } Square;
 
+typedef enum {
+    PLAYING = 0,
+    CHECK_MATE = 1,
+    STALE_MATE = 2,
+} GameEnd;
+
 BoardState init_board(void);
 int position_from_square(Square *input_square);
 uint64_t get_full_bit_board(BoardState *board);
@@ -24,5 +30,6 @@ void make_move(GameState *game_state);
 char color_to_move(GameState *game_state);
 int is_enemy(char piece_color, int position, BoardState *board);
 void print_bitboard(uint64_t bitboard);
+int has_game_ended(GameState *game_state);
 
 #endif

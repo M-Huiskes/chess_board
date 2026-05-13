@@ -397,6 +397,7 @@ void play_ui_game(GameState *game_state)
 {
     int running = 1;
     int redraw_board = 1;
+    int game_ended = 0;
 
     SDL_Renderer *renderer = get_window_renderer();
     SDL_Event event;
@@ -416,6 +417,12 @@ void play_ui_game(GameState *game_state)
             if (game_state->output_position != 0) {
                 if (!(game_state->awaiting_promotion)) {
                     make_move(game_state);
+                    game_ended = has_game_ended(game_state);
+
+                    if (game_ended) {
+                        break;
+                    }
+
                     set_default_square(game_state);
                 }
             }

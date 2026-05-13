@@ -5,7 +5,6 @@ TODO spel:
     - Fixen dat als koning schaak staat, dat squares in het verlengde van diagonaal / horizontaal ook niet geldig zijn
     - Fixen dat in de verdigde stukken op de een of andere manier opgeslagen worden -> defend_map?
         - Of bit wel includen in attack_map als het een team stuk is
-    - Schaak state wordt niet altijd gefixt, soms na schaak voor zwart, slaan stuk die schaak zet -> volgende zet zwart schaak
 - Nog te implementeren
     - Schaakmat
     - Gelijkspel

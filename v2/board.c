@@ -589,3 +589,52 @@ void make_move(GameState *game_state)
     // TODO: Nog fixen dat als koning schaak staat door diagonaal / horizontaal
     // Dat dan squares achter attack ook niet beschikbaar zijn
 }
+
+int has_game_ended(GameState *game_state)
+{
+    char color_playing = game_state->move_history.count % 2 == 0 ? 'w' : 'b';
+    int attack_moves_only = 0;
+    printf("Reached game ended with %c color playing\n", color_playing);
+
+    for (int i = 0; i < 12; i++) {
+        if (color_playing == 'w' && i >= 6) {
+            continue;
+        }
+        if (color_playing == 'b' && i < 6) {
+            continue;
+        }
+
+        Piece *piece = get_piece_by_index(i, &(game_state->board));
+        uint64_t piece_bb = piece->pos_bb;
+        game_state->selected_piece = piece;
+
+        while (piece_bb) {
+            int position = get_lowest_bit_index(piece_bb);
+            // Update game_state accordingly, this is ugly!
+            // but after make_move all these values are set to default values
+            game_state->bit_position = position;
+            game_state->selected_square = square_from_position(position);
+            uint64_t possible_moves =
+                find_possible_moves(game_state, attack_moves_only);
+
+            if (game_state->check_info.is_check) {
+                possible_moves =
+                    validate_moves_in_check(game_state, possible_moves);
+            }
+
+            if (possible_moves) {
+                printf("Found possible moves for %c\n",
+                       game_state->selected_piece->symbol);
+                print_bitboard(possible_moves);
+                return PLAYING;
+            }
+            piece_bb &= piece_bb - 1;
+        }
+    }
+
+    if (game_state->check_info.is_check) {
+        return CHECK_MATE; 
+    } else {
+        return STALE_MATE;
+    }
+}
