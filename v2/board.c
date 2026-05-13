@@ -402,19 +402,19 @@ void validate_check_fixed(GameState *game_state)
     } else {
         king = game_state->board.black.pieces[KING_ARRAY_INDEX];
         attack_map = calculate_attack_map(game_state, 'w', run_check_info);
-
-        if (king.pos_bb & attack_map) {
-            printf("Check not fixed after move");
-            exit(EXIT_FAILURE);
-        }
-
-        game_state->check_info = (CheckInfo){
-            .check_by = '0',
-            .is_check = 0,
-            .is_double_check = 0,
-            .position_check = -1,
-        };
     }
+
+    if (king.pos_bb & attack_map) {
+        printf("Check not fixed after move");
+        exit(EXIT_FAILURE);
+    }
+
+    game_state->check_info = (CheckInfo){
+        .check_by = '0',
+        .is_check = 0,
+        .is_double_check = 0,
+        .position_check = -1,
+    };
 }
 
 void update_castling_state(GameState *game_state, char color)
@@ -581,6 +581,9 @@ void make_move(GameState *game_state)
     // info
     if (is_check_initially) {
         validate_check_fixed(game_state);
+        if (game_state->check_info.is_check) {
+            exit(EXIT_FAILURE);
+        }
     }
 
     // TODO: Nog fixen dat als koning schaak staat door diagonaal / horizontaal

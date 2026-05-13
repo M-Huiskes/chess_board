@@ -19,5 +19,5 @@ clean:
 	rm -f $(OBJ) $(EXEC)
 
 
-chess: all
+run: all
 	./chess ui
