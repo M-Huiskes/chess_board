@@ -594,7 +594,6 @@ int has_game_ended(GameState *game_state)
 {
     char color_playing = game_state->move_history.count % 2 == 0 ? 'w' : 'b';
     int attack_moves_only = 0;
-    printf("Reached game ended with %c color playing\n", color_playing);
 
     for (int i = 0; i < 12; i++) {
         if (color_playing == 'w' && i >= 6) {
@@ -623,9 +622,6 @@ int has_game_ended(GameState *game_state)
             }
 
             if (possible_moves) {
-                printf("Found possible moves for %c\n",
-                       game_state->selected_piece->symbol);
-                print_bitboard(possible_moves);
                 return PLAYING;
             }
             piece_bb &= piece_bb - 1;

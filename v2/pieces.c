@@ -129,8 +129,9 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board,
             continue;
         }
         if ((is_bit_set(full_board, take_directions[i]) &&
-             is_enemy(color_playing, take_directions[i],
-                      &(game_state->board))) ||
+             (is_enemy(color_playing, take_directions[i],
+                       &(game_state->board)) ||
+              (attack_moves_only))) ||
             attack_moves_only) {
             possible_moves |= ((uint64_t) 1 << take_directions[i]);
         }
@@ -175,7 +176,8 @@ int check_horizontal_move(int position, int next_pos)
 }
 
 void find_diagonal_moves(GameState *game_state, int max_counter,
-                         uint64_t full_board, uint64_t *possible_moves)
+                         uint64_t full_board, uint64_t *possible_moves,
+                         int attack_moves_only)
 {
     int directions[4] = {7, 9, -7, -9};
     int position = game_state->bit_position;
@@ -188,7 +190,8 @@ void find_diagonal_moves(GameState *game_state, int max_counter,
             counter++;
             if (is_bit_set(full_board, next_pos)) {
                 if (is_enemy(game_state->selected_piece->color, next_pos,
-                             &(game_state->board))) {
+                             &(game_state->board)) ||
+                    attack_moves_only) {
                     *possible_moves |= (uint64_t) 1 << next_pos;
                 }
                 break;
@@ -200,16 +203,19 @@ void find_diagonal_moves(GameState *game_state, int max_counter,
     }
 }
 
-uint64_t find_possible_bishop_moves(GameState *game_state, uint64_t full_board)
+uint64_t find_possible_bishop_moves(GameState *game_state, uint64_t full_board,
+                                    int attack_moves_only)
 {
     int max_counter = 8;
     uint64_t possible_moves = (uint64_t) 0;
-    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves);
+    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves,
+                        attack_moves_only);
     return possible_moves;
 }
 
 void find_orthogonal_moves(GameState *game_state, int max_counter,
-                           uint64_t full_board, uint64_t *possible_moves)
+                           uint64_t full_board, uint64_t *possible_moves,
+                           int attack_moves_only)
 {
     int position = game_state->bit_position;
 
@@ -223,7 +229,8 @@ void find_orthogonal_moves(GameState *game_state, int max_counter,
             counter++;
             if (is_bit_set(full_board, next_pos)) {
                 if (is_enemy(game_state->selected_piece->color, next_pos,
-                             &(game_state->board))) {
+                             &(game_state->board)) ||
+                    attack_moves_only) {
                     *possible_moves |= (uint64_t) 1 << next_pos;
                 }
                 break;
@@ -243,7 +250,8 @@ void find_orthogonal_moves(GameState *game_state, int max_counter,
             counter++;
             if (is_bit_set(full_board, next_pos)) {
                 if (is_enemy(game_state->selected_piece->color, next_pos,
-                             &(game_state->board))) {
+                             &(game_state->board)) ||
+                    attack_moves_only) {
                     *possible_moves |= (uint64_t) 1 << next_pos;
                 }
                 break;
@@ -255,24 +263,30 @@ void find_orthogonal_moves(GameState *game_state, int max_counter,
     }
 }
 
-uint64_t find_possible_rook_moves(GameState *game_state, uint64_t full_board)
+uint64_t find_possible_rook_moves(GameState *game_state, uint64_t full_board,
+                                  int attack_moves_only)
 {
     int max_counter = 8;
     uint64_t possible_moves = (uint64_t) 0;
-    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
+    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves,
+                          attack_moves_only);
     return possible_moves;
 }
 
-uint64_t find_possible_queen_moves(GameState *game_state, uint64_t full_board)
+uint64_t find_possible_queen_moves(GameState *game_state, uint64_t full_board,
+                                   int attack_moves_only)
 {
     int max_counter = 8;
     uint64_t possible_moves = (uint64_t) 0;
-    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves);
-    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
+    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves,
+                        attack_moves_only);
+    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves,
+                          attack_moves_only);
     return possible_moves;
 }
 
-uint64_t find_possible_knight_moves(GameState *game_state, uint64_t full_board)
+uint64_t find_possible_knight_moves(GameState *game_state, uint64_t full_board,
+                                    int attack_moves_only)
 {
     int position = game_state->bit_position;
     uint64_t possible_moves = (uint64_t) 0;
@@ -286,7 +300,8 @@ uint64_t find_possible_knight_moves(GameState *game_state, uint64_t full_board)
                 if (check_horizontal_move(pos_1, new_pos)) {
                     if (is_bit_set(full_board, new_pos) &&
                         !(is_enemy(game_state->selected_piece->color, new_pos,
-                                   &(game_state->board)))) {
+                                   &(game_state->board))) &&
+                        !(attack_moves_only)) {
                         continue;
                     }
                     possible_moves |= (uint64_t) 1 << new_pos;
@@ -300,7 +315,8 @@ uint64_t find_possible_knight_moves(GameState *game_state, uint64_t full_board)
                 if (check_vertical_move(new_hor)) {
                     if (is_bit_set(full_board, new_hor) &&
                         !(is_enemy(game_state->selected_piece->color, new_hor,
-                                   &(game_state->board)))) {
+                                   &(game_state->board))) &&
+                        !(attack_moves_only)) {
                         continue;
                     }
                     possible_moves |= (uint64_t) 1 << new_hor;
@@ -327,7 +343,8 @@ int validate_castle_move(int king_pos, int rook_pos, int direction,
     return 1;
 }
 
-uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
+uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board,
+                                  int attack_moves_only)
 {
     Piece *piece = game_state->selected_piece;
 
@@ -335,8 +352,10 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board)
 
     int max_counter = 1;
     uint64_t possible_moves = (uint64_t) 0;
-    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves);
-    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves);
+    find_diagonal_moves(game_state, max_counter, full_board, &possible_moves,
+                        attack_moves_only);
+    find_orthogonal_moves(game_state, max_counter, full_board, &possible_moves,
+                          attack_moves_only);
 
     // Prevent moving in check
     TeamState *enemy_team = get_enemy_team_state(game_state, color_moving);
@@ -544,23 +563,28 @@ uint64_t find_possible_moves(GameState *game_state, int attack_moves_only)
         break;
     case 'B':
     case 'b':
-        possible_moves = find_possible_bishop_moves(game_state, full_board);
+        possible_moves = find_possible_bishop_moves(game_state, full_board,
+                                                    attack_moves_only);
         break;
     case 'R':
     case 'r':
-        possible_moves = find_possible_rook_moves(game_state, full_board);
+        possible_moves =
+            find_possible_rook_moves(game_state, full_board, attack_moves_only);
         break;
     case 'Q':
     case 'q':
-        possible_moves = find_possible_queen_moves(game_state, full_board);
+        possible_moves = find_possible_queen_moves(game_state, full_board,
+                                                   attack_moves_only);
         break;
     case 'N':
     case 'n':
-        possible_moves = find_possible_knight_moves(game_state, full_board);
+        possible_moves = find_possible_knight_moves(game_state, full_board,
+                                                    attack_moves_only);
         break;
     case 'K':
     case 'k':
-        possible_moves = find_possible_king_moves(game_state, full_board);
+        possible_moves =
+            find_possible_king_moves(game_state, full_board, attack_moves_only);
         break;
 
     default:
