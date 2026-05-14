@@ -431,5 +431,13 @@ void play_ui_game(GameState *game_state)
         }
     }
 
+    if (game_ended == CHECK_MATE) {
+        char winning_color = game_state->move_history.count % 2 == 0 ? 'b' : 'w';
+        char *winner = winning_color == 'w' ? "white" : "black";
+        printf("The game is won by %s\n", winner);
+    } else if (game_ended == STALE_MATE) {
+        printf("The game ended in a draw!\n");
+    }
+
     exit(EXIT_SUCCESS);
 }
