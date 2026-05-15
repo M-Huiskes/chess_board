@@ -361,7 +361,9 @@ uint64_t find_possible_king_moves(GameState *game_state, uint64_t full_board,
     TeamState *enemy_team = get_enemy_team_state(game_state, color_moving);
     uint64_t enemy_attack_map = enemy_team->attack_map;
 
-    possible_moves = possible_moves & ~enemy_attack_map;
+    if (!(attack_moves_only)) {
+        possible_moves = possible_moves & ~enemy_attack_map;
+    }
 
     // Castling, only when not in check
     TeamState *team_state = get_team_state_by_color(game_state, color_moving);
@@ -408,6 +410,8 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
     uint64_t possible_moves = (uint64_t) 0;
 
     char selected_piece = tolower(game_state->selected_piece->symbol);
+    char color_playing = game_state->selected_piece->color;
+
     if (selected_piece == 'n') {
         return possible_moves;
     }
@@ -430,7 +434,9 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
 
         if (selected_piece == 'p') {
             if (possible_move_pos == pin_info.pinner_position && count == 1 &&
-                (abs(direction) == 7 || abs(direction) == 9)) {
+                (((direction == 7 || direction == 9) && color_playing == 'w') ||
+                 ((direction == -7 || direction == -9) &&
+                  color_playing == 'b'))) {
                 set_bit(&possible_moves, possible_move_pos);
                 break;
             }
