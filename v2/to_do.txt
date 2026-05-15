@@ -1,8 +1,5 @@
 TODO spel:
 - Errors:
-    - Dame snel naar voren, dan pion op eerste rij heeft verkeerde possible moves 
-            (e2->e4, f7->f5, Q->e2, fxe4, Qxe4 -> pawn e7 heeft niet de goede zetten)
-    - Fixen dat als koning schaak staat, dat squares in het verlengde van diagonaal / horizontaal ook niet geldig zijn
     - Fix dat squares aangevallen door koning in attack map komen
 - Nog te implementeren
     - Gelijkspel

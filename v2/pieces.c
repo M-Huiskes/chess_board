@@ -442,7 +442,7 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
                      game_state->bit_position / 8 == 1) ||
                     (game_state->selected_piece->color == 'b' &&
                      game_state->bit_position / 8 == 6)) {
-                    set_bit(&possible_moves, possible_move_pos + 8);
+                    set_bit(&possible_moves, possible_move_pos + direction);
                 }
 
                 break;
