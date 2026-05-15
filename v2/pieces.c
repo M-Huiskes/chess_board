@@ -459,15 +459,51 @@ uint64_t calculate_pinned_piece_moves(GameState *game_state,
     return possible_moves;
 }
 
+int get_check_direction(int check_from_position, int king_pos)
+{
+
+    // Check direction 1 last, as it will always result in true
+    float directions[4] = {7., 8., 9., 1.};
+    int check_direction;
+    int difference = check_from_position - king_pos;
+
+    for (int i = 0; i < 4; i++) {
+        float ratio = difference / directions[i];
+
+        if (fmod(ratio, 1.0) == 0.0) {
+            if (ratio < 0) {
+                check_direction = (int) directions[i];
+            } else {
+                check_direction = -((int) directions[i]);
+            }
+            break;
+        }
+    }
+
+    return check_direction;
+}
+
 uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
 {
     uint64_t validated_moves = (uint64_t) 0;
     CheckInfo check_info = game_state->check_info;
     char selected_piece = tolower(game_state->selected_piece->symbol);
+    int check_from_position = check_info.position_check;
+
+    TeamState *team_state =
+        get_team_state_by_color(game_state, game_state->selected_piece->color);
+
+    int king_pos =
+        get_lowest_bit_index(team_state->pieces[KING_ARRAY_INDEX].pos_bb);
+    int check_direction = get_check_direction(check_from_position, king_pos);
 
     // King moves are generated already using the enemy attack map
-    // Not needed to further verify it's moves
+    // Not needed to further verify it's moves, except for the direction it is
+    // attacked from
     if (selected_piece == 'k') {
+        if (is_bit_set(possible_moves, king_pos + check_direction)) {
+            unset_bit(&possible_moves, king_pos + check_direction);
+        }
         return possible_moves;
     }
 
@@ -476,7 +512,6 @@ uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
     }
 
     char check_by = tolower(check_info.check_by);
-    int check_from_position = check_info.position_check;
 
     // Pawn and knight checks are only solved by capturing the piece or moving
     // king
@@ -491,38 +526,14 @@ uint64_t validate_moves_in_check(GameState *game_state, uint64_t possible_moves)
             possible_moves &= possible_moves - 1;
         }
     } else {
-        TeamState *team_state = get_team_state_by_color(
-            game_state, game_state->selected_piece->color);
-        int king_pos =
-            get_lowest_bit_index(team_state->pieces[KING_ARRAY_INDEX].pos_bb);
-
-        // Check direction 1 last, as it will always result in true
-        float directions[4] = {7., 8., 9., 1.};
-        int check_in_direction;
-        int difference = check_from_position - king_pos;
-
-        for (int i = 0; i < 4; i++) {
-            float ratio = difference / directions[i];
-
-            if (fmod(ratio, 1.0) == 0.0) {
-                if (ratio < 0) {
-                    check_in_direction = (int) directions[i];
-                } else {
-                    check_in_direction = -((int) directions[i]);
-                }
-                break;
-            }
-        }
-
-        int next_pos = check_from_position;
         int count = 0;
-
+        int next_pos = check_from_position;
         // Add count condition, to avoid infinte loop
         while (next_pos != king_pos && count < 8) {
             if (is_bit_set(possible_moves, next_pos)) {
                 set_bit(&validated_moves, next_pos);
             }
-            next_pos = next_pos + check_in_direction;
+            next_pos = next_pos + check_direction;
             count++;
         }
     }
