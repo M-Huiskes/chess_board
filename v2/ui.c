@@ -3,6 +3,7 @@
 #include "bit_utils.h"
 #include "board.h"
 #include "pieces.h"
+#include "score.h"
 #include "state.h"
 
 #include <SDL2/SDL.h>
@@ -417,6 +418,8 @@ void play_ui_game(GameState *game_state)
             if (game_state->output_position != 0) {
                 if (!(game_state->awaiting_promotion)) {
                     make_move(game_state);
+                    int evaluation = calculate_evaluation(game_state);
+                    printf("Current evaluation: %d\n", evaluation);
                     game_ended = has_game_ended(game_state);
 
                     if (game_ended) {
@@ -432,7 +435,8 @@ void play_ui_game(GameState *game_state)
     }
 
     if (game_ended == CHECK_MATE) {
-        char winning_color = game_state->move_history.count % 2 == 0 ? 'b' : 'w';
+        char winning_color =
+            game_state->move_history.count % 2 == 0 ? 'b' : 'w';
         char *winner = winning_color == 'w' ? "white" : "black";
         printf("The game is won by %s\n", winner);
     } else if (game_ended == STALE_MATE) {
