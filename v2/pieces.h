@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 typedef struct GameState GameState;
+typedef struct OldState OldState;
 
 const extern uint64_t START_WHITE_PAWNS;
 const extern uint64_t START_BLACK_PAWNS;

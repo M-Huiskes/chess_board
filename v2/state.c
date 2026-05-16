@@ -65,12 +65,30 @@ GameState init_game_state(void)
                             .output_position = 0,
                             .possible_moves = (uint64_t) 0,
                             .awaiting_promotion = 0,
-                            .check_info = (CheckInfo){
-                                .is_check = 0,
-                                .is_double_check = 0,
-                                .check_by = '0',
-                                .position_check = 0,
+                            .check_info =
+                                (CheckInfo){
+                                    .is_check = 0,
+                                    .is_double_check = 0,
+                                    .check_by = '0',
+                                    .position_check = 0,
+                                },
+                            .computer_move = (ComputerMove){
+                                .from = -1,
+                                .to = -1,
+                                .piece = '0',
                             }};
 
     return game_state;
 }
+
+OldState write_old_state(GameState *game_state)
+{
+    return (OldState){
+        .last_moved_piece = game_state->last_moved_piece,
+        .en_passant_possible = game_state->en_passant_possible,
+        .promote_to = game_state->promote_to,
+        .possible_moves = game_state->possible_moves,
+        .awaiting_promotion = game_state->awaiting_promotion,
+        .check_info = game_state->check_info,
+    };
+};

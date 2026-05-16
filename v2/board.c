@@ -172,40 +172,40 @@ int handle_promotion_move(GameState *game_state, int output_position,
     case 'N':
     case 'n':
         if (current_move_type == CAPTURE) {
-            move_type = PROMO_CAPTURE_KNIGHT;
+            move_type = PROMOTION_CAPTURE;
         } else {
-            move_type = PROMO_KNIGHT;
+            move_type = PROMOTION;
         }
         break;
     case 'R':
     case 'r':
         if (current_move_type == CAPTURE) {
-            move_type = PROMO_CAPTURE_ROOK;
+            move_type = PROMOTION_CAPTURE;
         } else {
-            move_type = PROMO_ROOK;
+            move_type = PROMOTION;
         }
         break;
     case 'Q':
     case 'q':
         if (current_move_type == CAPTURE) {
-            move_type = PROMO_CAPTURE_QUEEN;
+            move_type = PROMOTION_CAPTURE;
         } else {
-            move_type = PROMO_QUEEN;
+            move_type = PROMOTION;
         }
         break;
     case 'B':
     case 'b':
         if (current_move_type == CAPTURE) {
-            move_type = PROMO_CAPTURE_BISHOP;
+            move_type = PROMOTION_CAPTURE;
         } else {
-            move_type = PROMO_BISHOP;
+            move_type = PROMOTION;
         }
         break;
     default:
         if (current_move_type == CAPTURE) {
-            move_type = PROMO_CAPTURE_QUEEN;
+            move_type = PROMOTION_CAPTURE;
         } else {
-            move_type = PROMO_QUEEN;
+            move_type = PROMOTION;
         }
         break;
     }
@@ -405,7 +405,7 @@ void validate_check_fixed(GameState *game_state)
     }
 
     if (king.pos_bb & attack_map) {
-        printf("Check not fixed after move");
+        printf("Check not fixed after move\n");
         exit(EXIT_FAILURE);
     }
 
@@ -417,42 +417,47 @@ void validate_check_fixed(GameState *game_state)
     };
 }
 
-void update_castling_state(GameState *game_state, char color)
+int update_castling_state(GameState *game_state, char color, int move_type)
 {
     TeamState *team_state = get_team_state_by_color(game_state, color);
     char selected_piece = tolower(game_state->selected_piece->symbol);
 
     if (!(team_state->long_castle_allowed) &&
         !(team_state->short_castle_allowed)) {
-        return;
+        return move_type;
     }
 
     if (selected_piece != 'k' && selected_piece != 'r') {
-        return;
+        return move_type;
     }
 
     if (selected_piece == 'k') {
         team_state->short_castle_allowed = 0;
         team_state->long_castle_allowed = 0;
-        return;
+        return move_type;
     }
 
     int selected_pos = game_state->bit_position;
     if (color == 'b') {
         if (selected_pos == BLACK_LEFT_ROOK_START) {
             team_state->long_castle_allowed = 0;
+            return DISABLED_LONG_CASTLE;
         }
         if (selected_pos == BLACK_RIGHT_ROOK_START) {
             team_state->short_castle_allowed = 0;
+            return DISABLED_SHORT_CASTLE;
         }
     } else {
         if (selected_pos == WHITE_LEFT_ROOK_START) {
             team_state->long_castle_allowed = 0;
+            return DISABLED_LONG_CASTLE;
         }
         if (selected_pos == WHITE_RIGHT_ROOK_START) {
             team_state->short_castle_allowed = 0;
+            return DISABLED_SHORT_CASTLE;
         }
     }
+    return move_type;
 }
 
 int is_castling_move(GameState *game_state)
@@ -472,7 +477,7 @@ int is_castling_move(GameState *game_state)
         team_state->long_castle_allowed = 0;
         team_state->short_castle_allowed = 0;
 
-        return CASTLE_QUEEN;
+        return CASTLE_LONG;
     }
 
     if (game_state->output_position - king_position == 2 &&
@@ -481,7 +486,7 @@ int is_castling_move(GameState *game_state)
         team_state->long_castle_allowed = 0;
         team_state->short_castle_allowed = 0;
 
-        return CASTLE_KING;
+        return CASTLE_SHORT;
     }
 
     return 0;
@@ -507,13 +512,13 @@ void make_move(GameState *game_state)
         int rook_position;
         int new_rook_position;
 
-        if (move_type == CASTLE_KING) {
+        if (move_type == CASTLE_SHORT) {
             rook_position = color_playing == 'w' ? WHITE_RIGHT_ROOK_START
                                                  : BLACK_RIGHT_ROOK_START;
             rook = get_piece_by_position(rook_position, &(game_state->board));
             new_rook_position = output_position - 1;
         }
-        if (move_type == CASTLE_QUEEN) {
+        if (move_type == CASTLE_LONG) {
             rook_position = color_playing == 'w' ? WHITE_LEFT_ROOK_START
                                                  : BLACK_LEFT_ROOK_START;
             rook = get_piece_by_position(rook_position, &(game_state->board));
@@ -526,7 +531,7 @@ void make_move(GameState *game_state)
 
     } else {
 
-        update_castling_state(game_state, color_playing);
+        move_type = update_castling_state(game_state, color_playing, move_type);
 
         Piece *other_piece =
             get_piece_by_position(output_position, &(game_state->board));
@@ -568,14 +573,7 @@ void make_move(GameState *game_state)
     }
 
     // Pinned pieces does not change game state
-    // Pinned pieces can only move along the direction from which they are
-    // pinned
     calculate_pinned_pieces(game_state);
-
-    // Is double check? If so, check can only be countered by moving king
-
-    // Check by pawn / knight -> only stoppable by
-    // capturing said pawn/knight (or moving king)
 
     // Validate whether check has been fixed after making move and reset check
     // info
@@ -585,9 +583,38 @@ void make_move(GameState *game_state)
             exit(EXIT_FAILURE);
         }
     }
+}
 
-    // TODO: Nog fixen dat als koning schaak staat door diagonaal / horizontaal
-    // Dat dan squares achter attack ook niet beschikbaar zijn
+void unmake_move(GameState *game_state, OldState old_state)
+{
+    MoveRecord last_move =
+        game_state->move_history.moves[game_state->move_history.count - 1];
+    
+    int from = get_from(last_move.move);
+    int to = get_to(last_move.move);
+    // int flags = get_flags(last_move.move);
+
+    Piece *moved_piece = get_piece_by_position(to, &(game_state->board));
+
+    // printf("Moved piece symbol %c, to %d, from %d\n", moved_piece->symbol, to,
+        //    from);
+    unset_bit(&(moved_piece->pos_bb), to);
+    set_bit(&(moved_piece->pos_bb), from);
+
+    if (last_move.captured_piece != '0') {
+        Piece *captured_piece =
+            get_piece_by_symbol(last_move.captured_piece, &(game_state->board));
+        set_bit(&(captured_piece->pos_bb), to);
+    }
+
+    game_state->last_moved_piece = old_state.last_moved_piece;
+    game_state->en_passant_possible = old_state.en_passant_possible;
+    game_state->promote_to = old_state.promote_to;
+    game_state->possible_moves = old_state.possible_moves;
+    game_state->awaiting_promotion = old_state.awaiting_promotion;
+    game_state->check_info = old_state.check_info;
+
+    game_state->move_history.count--;
 }
 
 int has_game_ended(GameState *game_state)
@@ -629,7 +656,7 @@ int has_game_ended(GameState *game_state)
     }
 
     if (game_state->check_info.is_check) {
-        return CHECK_MATE; 
+        return CHECK_MATE;
     } else {
         return STALE_MATE;
     }

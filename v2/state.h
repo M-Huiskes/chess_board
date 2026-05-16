@@ -2,24 +2,21 @@
 #define STATE_H
 
 #include "board.h"
+#include "computer.h"
 
 #include <stdint.h>
 
 typedef enum {
     QUIET = 0,
     DOUBLE_PAWN = 1,
-    CASTLE_KING = 2,
-    CASTLE_QUEEN = 3,
+    CASTLE_SHORT = 2,
+    CASTLE_LONG = 3,
     CAPTURE = 4,
     EN_PASSANT = 5,
-    PROMO_KNIGHT = 8,
-    PROMO_BISHOP = 9,
-    PROMO_ROOK = 10,
-    PROMO_QUEEN = 11,
-    PROMO_CAPTURE_KNIGHT = 12,
-    PROMO_CAPTURE_BISHOP = 13,
-    PROMO_CAPTURE_ROOK = 14,
-    PROMO_CAPTURE_QUEEN = 15,
+    PROMOTION = 6,
+    PROMOTION_CAPTURE = 6,
+    DISABLED_SHORT_CASTLE = 7,
+    DISABLED_LONG_CASTLE = 8,
 } MoveFlag;
 
 typedef struct {
@@ -53,10 +50,21 @@ typedef struct GameState {
     uint64_t possible_moves;
     int awaiting_promotion;
     CheckInfo check_info;
+    ComputerMove computer_move;
 } GameState;
+
+typedef struct OldState {
+    char last_moved_piece;
+    int en_passant_possible;
+    char promote_to;
+    uint64_t possible_moves;
+    int awaiting_promotion;
+    CheckInfo check_info;
+} OldState;
 
 GameState init_game_state();
 MoveRecord encode_move(int from, int to, int flags, char captured_piece);
+OldState write_old_state(GameState *game_state);
 int get_from(uint16_t move);
 int get_to(uint16_t move);
 int get_flags(uint16_t move);

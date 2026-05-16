@@ -27,6 +27,7 @@ Piece *get_piece_by_square(Square *input_square, BoardState *board);
 Piece *get_piece_by_position(int position, BoardState *board);
 Square square_from_position(int position);
 void make_move(GameState *game_state);
+void unmake_move(GameState *game_state, OldState old_state);
 char color_to_move(GameState *game_state);
 int is_enemy(char piece_color, int position, BoardState *board);
 void print_bitboard(uint64_t bitboard);

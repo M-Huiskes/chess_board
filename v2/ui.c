@@ -2,8 +2,9 @@
 
 #include "bit_utils.h"
 #include "board.h"
+#include "computer.h"
+#include "evaluation.h"
 #include "pieces.h"
-#include "score.h"
 #include "state.h"
 
 #include <SDL2/SDL.h>
@@ -394,24 +395,55 @@ void static render_board(SDL_Renderer *renderer, GameState *game_state)
     SDL_RenderPresent(renderer);
 }
 
+void determine_computer_move(GameState *game_state, int depth,
+                             int computer_is_maxing)
+{
+    minimax(game_state, depth, computer_is_maxing);
+    ComputerMove computer_move = game_state->computer_move;
+
+    printf("Computer move, piece %c from %d to %d\n", computer_move.piece,
+           computer_move.from, computer_move.to);
+
+    game_state->bit_position = computer_move.from;
+    game_state->selected_square = square_from_position(computer_move.from);
+    game_state->output_position = computer_move.to;
+
+    game_state->selected_piece = get_piece_by_square(
+        &(game_state->selected_square), &(game_state->board));
+}
+
 void play_ui_game(GameState *game_state)
 {
     int running = 1;
     int redraw_board = 1;
     int game_ended = 0;
+    char computer_color = 'b';
+    int depth = 1;
+
+    int computer_playing = computer_color == 'w' ? 1 : 0;
+    int computer_is_maxing = computer_color == 'w' ? 1 : 0;
 
     SDL_Renderer *renderer = get_window_renderer();
     SDL_Event event;
 
     while (running) {
+        computer_playing = computer_color == 'w'
+                               ? game_state->move_history.count % 2 == 0
+                               : game_state->move_history.count % 2 == 1;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
             }
-            if (event.type == SDL_MOUSEBUTTONDOWN) {
+            if (event.type == SDL_MOUSEBUTTONDOWN && !(computer_playing)) {
                 process_user_input(event, game_state);
                 redraw_board = 1;
             }
+        }
+
+        if (computer_playing) {
+            determine_computer_move(game_state, depth, computer_is_maxing);
+            computer_playing = 0;
+            redraw_board = 1;
         }
 
         if (redraw_board) {
@@ -419,7 +451,6 @@ void play_ui_game(GameState *game_state)
                 if (!(game_state->awaiting_promotion)) {
                     make_move(game_state);
                     int evaluation = calculate_evaluation(game_state);
-                    printf("Current evaluation: %d\n", evaluation);
                     game_ended = has_game_ended(game_state);
 
                     if (game_ended) {
