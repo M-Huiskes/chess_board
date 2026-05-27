@@ -589,15 +589,13 @@ void unmake_move(GameState *game_state, OldState old_state)
 {
     MoveRecord last_move =
         game_state->move_history.moves[game_state->move_history.count - 1];
-    
+
     int from = get_from(last_move.move);
     int to = get_to(last_move.move);
     // int flags = get_flags(last_move.move);
 
     Piece *moved_piece = get_piece_by_position(to, &(game_state->board));
 
-    // printf("Moved piece symbol %c, to %d, from %d\n", moved_piece->symbol, to,
-        //    from);
     unset_bit(&(moved_piece->pos_bb), to);
     set_bit(&(moved_piece->pos_bb), from);
 

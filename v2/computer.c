@@ -12,10 +12,9 @@ int minimax(GameState *game_state, int depth, int is_maxing);
 static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                       int depth, int is_maxing, int best_score)
 {
-    // printf("Running eval_moves for depth %d and is_maxing %d\n", depth,
-    //    is_maxing);
+    printf("Running eval_moves for depth %d and is_maxing %d\n", depth,
+           is_maxing);
     for (int i = piece_start; i < piece_end; i++) {
-        printf("Running for index %d\n", i);
         Piece *piece = get_piece_by_index(i, &(game_state->board));
         uint64_t piece_bb = piece->pos_bb;
         game_state->selected_piece = piece;
@@ -37,27 +36,29 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
             OldState old_state = write_old_state(game_state);
 
             // Loop over possible moves, make the move and continue recursively
+
             while (possible_moves) {
                 game_state->output_position =
                     get_lowest_bit_index(possible_moves);
-                // printf("Making move of piece %c from %d to %d\n",
-                // piece->symbol,
-                //    position, game_state->output_position);
                 make_move(game_state);
+                // TODO: This is very ugly, just to check whether it now works
+                // correctly!!!
+                game_state->selected_square = square_from_position(position);
+                game_state->bit_position = position;
+                game_state->selected_piece = piece;
+                game_state->output_position =
+                    get_lowest_bit_index(possible_moves);
+
                 int score = minimax(game_state, depth - 1, !is_maxing);
 
                 if (is_maxing ? score > best_score : score < best_score) {
                     best_score = score;
-                    printf("Reached best score\n");
                     if (!is_maxing) {
                         game_state->computer_move = (ComputerMove){
                             .from = game_state->bit_position,
                             .to = game_state->output_position,
                             .piece = game_state->selected_piece->symbol,
                         };
-                        printf("Computer move, piece %c from %d to %d\n",
-                               game_state->computer_move.piece, game_state->computer_move.from,
-                               game_state->computer_move.to);
                     }
                 }
                 unmake_move(game_state, old_state);
