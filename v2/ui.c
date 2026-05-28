@@ -401,9 +401,6 @@ void determine_computer_move(GameState *game_state, int depth,
     minimax(game_state, depth, computer_is_maxing);
     ComputerMove computer_move = game_state->computer_move;
 
-    printf("Computer move, piece %c from %d to %d\n", computer_move.piece,
-           computer_move.from, computer_move.to);
-
     game_state->bit_position = computer_move.from;
     game_state->selected_square = square_from_position(computer_move.from);
     game_state->output_position = computer_move.to;

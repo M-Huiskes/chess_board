@@ -40,7 +40,7 @@ void init_pieces(Piece team[6], char color)
     } else {
         symbols = "prnbqk";
     }
-    int values[] = {1, 3, 3, 5, 9, 0};
+    int values[] = {1, 5, 3, 3, 9, 0};
 
     for (int i = 0; i < 6; i++) {
         team[i] = (Piece){
