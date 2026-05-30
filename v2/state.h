@@ -14,9 +14,9 @@ typedef enum {
     CAPTURE = 4,
     EN_PASSANT = 5,
     PROMOTION = 6,
-    PROMOTION_CAPTURE = 6,
-    DISABLED_SHORT_CASTLE = 7,
-    DISABLED_LONG_CASTLE = 8,
+    PROMOTION_CAPTURE = 7,
+    DISABLED_SHORT_CASTLE = 8,
+    DISABLED_LONG_CASTLE = 9,
 } MoveFlag;
 
 typedef struct {

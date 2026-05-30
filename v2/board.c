@@ -592,12 +592,19 @@ void unmake_move(GameState *game_state, OldState old_state)
 
     int from = get_from(last_move.move);
     int to = get_to(last_move.move);
-    // int flags = get_flags(last_move.move);
+    int flags = get_flags(last_move.move);
 
     Piece *moved_piece = get_piece_by_position(to, &(game_state->board));
-
     unset_bit(&(moved_piece->pos_bb), to);
-    set_bit(&(moved_piece->pos_bb), from);
+
+    if (flags == PROMOTION || flags == PROMOTION_CAPTURE) {
+        Piece *last_moved_piece = get_piece_by_symbol(
+            game_state->last_moved_piece, &(game_state->board));
+        set_bit(&(last_moved_piece->pos_bb), from);
+        printf("Reset bit of %c\n", last_moved_piece->symbol);
+    } else {
+        set_bit(&(moved_piece->pos_bb), from);
+    }
 
     if (last_move.captured_piece != '0') {
         Piece *captured_piece =

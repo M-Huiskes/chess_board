@@ -4,4 +4,6 @@ TODO spel:
         - 3 keer zelfde positie?
     - Unmake move
         - Unmake van castle -> hoe bepalen of de andere type castle ook weer toegestaan is of niet
+    - Computer
+        - Promotie -> knight en queen als opties
         

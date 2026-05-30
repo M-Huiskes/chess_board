@@ -404,6 +404,7 @@ void determine_computer_move(GameState *game_state, int depth,
     game_state->bit_position = computer_move.from;
     game_state->selected_square = square_from_position(computer_move.from);
     game_state->output_position = computer_move.to;
+    game_state->promote_to = computer_move.promote_to;
 
     game_state->selected_piece = get_piece_by_square(
         &(game_state->selected_square), &(game_state->board));

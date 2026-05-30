@@ -87,7 +87,7 @@ uint64_t find_possible_pawn_moves(GameState *game_state, uint64_t full_board,
     if (!(attack_moves_only)) {
         // Check one move forward
         int direction_one = get_direction_pawn_move(position, color_playing, 8);
-        if (!(is_bit_set(full_board, direction_one))) {
+        if (!(is_bit_set(full_board, direction_one)) && (direction_one < 63 || direction_one > 0)) {
             possible_moves |= ((uint64_t) 1 << direction_one);
 
             int direction_two =
