@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     }
 
     GameState game_state = init_game_state();
-    int play_computer = strcmp(argv[2], "ui") == "computer";
+    int play_computer = strcmp(argv[2], "computer") == 0;
 
     if (strcmp(argv[1], "terminal") == 0) {
         play_terminal_game(&game_state);
