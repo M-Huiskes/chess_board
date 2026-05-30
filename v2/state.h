@@ -60,6 +60,10 @@ typedef struct OldState {
     uint64_t possible_moves;
     int awaiting_promotion;
     CheckInfo check_info;
+    int white_short_castle;
+    int white_long_castle;
+    int black_short_castle;
+    int black_long_castle;
 } OldState;
 
 GameState init_game_state();

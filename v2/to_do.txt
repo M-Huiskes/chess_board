@@ -3,7 +3,12 @@ TODO spel:
     - Gelijkspel
         - 3 keer zelfde positie?
     - Unmake move
-        - Unmake van castle -> hoe bepalen of de andere type castle ook weer toegestaan is of niet
+        - Unmake van castle -> hoe bepalen of de andere type castle ook weer toegestaan is of niet✅
     - Computer
-        - Promotie -> knight en queen als opties
+        - Promotie -> knight en queen als opties✅
+        - Alpha beta pruning
+    - Evaluation
+        - Einde spel -> checkmate and draw influence evaluation
+        - Piece positions
+        - King safety
         

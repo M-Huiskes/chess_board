@@ -618,6 +618,10 @@ void unmake_move(GameState *game_state, OldState old_state)
     game_state->possible_moves = old_state.possible_moves;
     game_state->awaiting_promotion = old_state.awaiting_promotion;
     game_state->check_info = old_state.check_info;
+    game_state->board.white.long_castle_allowed = old_state.white_long_castle;
+    game_state->board.white.short_castle_allowed = old_state.white_short_castle;
+    game_state->board.black.long_castle_allowed = old_state.black_long_castle;
+    game_state->board.black.short_castle_allowed = old_state.black_short_castle;
 
     game_state->move_history.count--;
 }

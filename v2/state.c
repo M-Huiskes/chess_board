@@ -90,5 +90,9 @@ OldState write_old_state(GameState *game_state)
         .possible_moves = game_state->possible_moves,
         .awaiting_promotion = game_state->awaiting_promotion,
         .check_info = game_state->check_info,
+        .white_long_castle = game_state->board.white.long_castle_allowed,
+        .white_short_castle = game_state->board.white.short_castle_allowed,
+        .black_long_castle = game_state->board.black.long_castle_allowed,
+        .white_short_castle = game_state->board.black.short_castle_allowed,
     };
 };
