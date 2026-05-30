@@ -62,7 +62,7 @@ GameState init_game_state(void)
                             .last_moved_piece = '0',
                             .en_passant_possible = 0,
                             .promote_to = '0',
-                            .output_position = 0,
+                            .output_position = -1,
                             .possible_moves = (uint64_t) 0,
                             .awaiting_promotion = 0,
                             .check_info =

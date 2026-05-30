@@ -5,6 +5,6 @@
 
 #include "state.h"
 
-void play_ui_game(GameState *game_state);
+void play_ui_game(GameState *game_state, int play_computer);
 
 #endif

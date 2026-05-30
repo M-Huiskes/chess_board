@@ -71,7 +71,7 @@ void static set_default_square(GameState *game_state)
     game_state->selected_piece = NULL;
     game_state->bit_position = -1;
     game_state->possible_moves = (uint64_t) 0;
-    game_state->output_position = 0;
+    game_state->output_position = -1;
     game_state->awaiting_promotion = 0;
 }
 
@@ -128,7 +128,7 @@ void static process_user_input(SDL_Event event, GameState *game_state)
     game_state->selected_square = selected_sq;
     game_state->bit_position = position;
     game_state->selected_piece = selected_piece;
-    game_state->output_position = 0;
+    game_state->output_position = -1;
 
     uint64_t possible_moves =
         find_possible_moves(game_state, attack_moves_only);
@@ -409,24 +409,36 @@ void determine_computer_move(GameState *game_state, int depth,
         &(game_state->selected_square), &(game_state->board));
 }
 
-void play_ui_game(GameState *game_state)
+void play_ui_game(GameState *game_state, int play_computer)
 {
     int running = 1;
     int redraw_board = 1;
     int game_ended = 0;
     char computer_color = 'b';
     int depth = 1;
+    int computer_playing;
+    int computer_is_maxing;
 
-    int computer_playing = computer_color == 'w' ? 1 : 0;
-    int computer_is_maxing = computer_color == 'w' ? 1 : 0;
+    if (play_computer) {
+        computer_playing = computer_color == 'w' ? 1 : 0;
+        computer_is_maxing = computer_color == 'w' ? 1 : 0;
+    } else {
+        computer_playing = 0;
+        computer_is_maxing = 0;
+    }
 
     SDL_Renderer *renderer = get_window_renderer();
     SDL_Event event;
 
     while (running) {
-        computer_playing = computer_color == 'w'
-                               ? game_state->move_history.count % 2 == 0
-                               : game_state->move_history.count % 2 == 1;
+        if (play_computer) {
+            computer_playing = computer_color == 'w'
+                                   ? game_state->move_history.count % 2 == 0
+                                   : game_state->move_history.count % 2 == 1;
+        } else {
+            computer_playing = 0;
+        }
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
@@ -443,7 +455,7 @@ void play_ui_game(GameState *game_state)
         }
 
         if (redraw_board) {
-            if (game_state->output_position != 0 || computer_playing) {
+            if (game_state->output_position != -1 || computer_playing) {
                 if (!(game_state->awaiting_promotion)) {
                     make_move(game_state);
                     game_ended = has_game_ended(game_state);

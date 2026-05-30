@@ -18,6 +18,8 @@ $(EXEC): $(OBJ)
 clean:
 	rm -f $(OBJ) $(EXEC)
 
-
 run: all
-	./chess ui
+	./chess ui computer
+
+run-no-bot: all
+	./chess ui no_computer
