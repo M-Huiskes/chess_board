@@ -439,19 +439,21 @@ void play_ui_game(GameState *game_state)
 
         if (computer_playing) {
             determine_computer_move(game_state, depth, computer_is_maxing);
-            computer_playing = 0;
             redraw_board = 1;
         }
 
         if (redraw_board) {
-            if (game_state->output_position != 0) {
+            if (game_state->output_position != 0 || computer_playing) {
                 if (!(game_state->awaiting_promotion)) {
                     make_move(game_state);
-                    int evaluation = calculate_evaluation(game_state);
                     game_ended = has_game_ended(game_state);
 
                     if (game_ended) {
                         break;
+                    }
+
+                    if (computer_playing) {
+                        computer_playing = 0;
                     }
 
                     set_default_square(game_state);

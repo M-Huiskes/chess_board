@@ -68,20 +68,10 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                 }
                 unmake_move(game_state, old_state);
                 possible_moves &= possible_moves - 1;
-                if (output_square.row == 0) {
 
-                    printf("Possible moves at the end\n");
-                    print_bitboard(possible_moves);
-                    break;
-                }
             }
             piece_bb &= piece_bb - 1;
-            if (output_square.row == 0) {
 
-                printf("Piece BB at the end\n");
-                print_bitboard(piece_bb);
-                break;
-            }
         }
     }
     return best_score;
