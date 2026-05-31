@@ -11,4 +11,8 @@ TODO spel:
         - Einde spel -> checkmate and draw influence evaluation
         - Piece positions
         - King safety
+- Errors
+    - Random bewoog de computer de kleur van de tegenpartij
+        - Alleen nog koning voor wit, zwart was computer, random kwam er een koning bij
+            Beste computer move was ook een move voor wit (terwijl computer zwart was)
         

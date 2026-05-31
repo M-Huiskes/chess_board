@@ -107,6 +107,11 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
 
                     int score = minimax(game_state, depth - 1, !is_maxing);
 
+                    game_state->selected_square =
+                        square_from_position(position);
+                    game_state->bit_position = position;
+                    game_state->selected_piece = piece;
+
                     if (is_maxing ? score > best_score : score < best_score) {
                         best_score = score;
                         game_state->computer_move = (ComputerMove){
@@ -132,12 +137,19 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
 
                     // TODO: Fix this, this is very ugly, just to check whether
                     // it now works correctly!!!
+                    // This is needed since attack map updates game state
                     game_state->selected_square =
                         square_from_position(position);
                     game_state->bit_position = position;
                     game_state->selected_piece = piece;
-
                     int score = minimax(game_state, depth - 1, !is_maxing);
+
+                    // Calculating evaluation with game end also updates game
+                    // state, so change it back accordingly
+                    game_state->selected_square =
+                        square_from_position(position);
+                    game_state->bit_position = position;
+                    game_state->selected_piece = piece;
 
                     if (is_maxing ? score > best_score : score < best_score) {
                         best_score = score;

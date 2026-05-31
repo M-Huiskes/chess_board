@@ -1,3 +1,4 @@
+#include "board.h"
 #include "state.h"
 
 int calculate_evaluation(GameState *game_state)
@@ -19,6 +20,18 @@ int calculate_evaluation(GameState *game_state)
             piece_bb &= piece_bb - 1;
             evaluation = evaluation + piece_value;
         }
+    }
+
+    int game_end = has_game_ended(game_state);
+    if (game_end == CHECK_MATE) {
+        char color_playing =
+            game_state->move_history.count % 2 == 0 ? 'w' : 'b';
+        int max_score = color_playing == 'w' ? 9999 : -9999;
+        evaluation = max_score;
+    }
+
+    if (game_end == STALE_MATE) {
+        evaluation = 0;
     }
 
     return evaluation;
