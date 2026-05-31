@@ -432,58 +432,69 @@ void play_ui_game(GameState *game_state, int play_computer)
     SDL_Event event;
 
     while (running) {
-        if (play_computer) {
-            computer_playing = computer_color == 'w'
-                                   ? game_state->move_history.count % 2 == 0
-                                   : game_state->move_history.count % 2 == 1;
-        } else {
-            computer_playing = 0;
-        }
+        if (!(game_ended)) {
 
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = 0;
+            if (play_computer) {
+                computer_playing =
+                    computer_color == 'w'
+                        ? game_state->move_history.count % 2 == 0
+                        : game_state->move_history.count % 2 == 1;
+            } else {
+                computer_playing = 0;
             }
-            if (event.type == SDL_MOUSEBUTTONDOWN && !(computer_playing)) {
-                process_user_input(event, game_state);
-                redraw_board = 1;
-            }
-        }
 
-        if (computer_playing) {
-            determine_computer_move(game_state, depth, computer_is_maxing);
-            redraw_board = 1;
-        }
-
-        if (redraw_board) {
-            if (game_state->output_position != -1 || computer_playing) {
-                if (!(game_state->awaiting_promotion)) {
-                    make_move(game_state);
-                    game_ended = has_game_ended(game_state);
-
-                    if (game_ended) {
-                        break;
-                    }
-
-                    if (computer_playing) {
-                        computer_playing = 0;
-                    }
-
-                    set_default_square(game_state);
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    running = 0;
+                }
+                if (event.type == SDL_MOUSEBUTTONDOWN && !(computer_playing)) {
+                    process_user_input(event, game_state);
+                    redraw_board = 1;
                 }
             }
-            render_board(renderer, game_state);
-            redraw_board = 0;
-        }
-    }
 
-    if (game_ended == CHECK_MATE) {
-        char winning_color =
-            game_state->move_history.count % 2 == 0 ? 'b' : 'w';
-        char *winner = winning_color == 'w' ? "white" : "black";
-        printf("The game is won by %s\n", winner);
-    } else if (game_ended == STALE_MATE) {
-        printf("The game ended in a draw!\n");
+            if (computer_playing) {
+                determine_computer_move(game_state, depth, computer_is_maxing);
+                redraw_board = 1;
+            }
+
+            if (redraw_board) {
+                if (game_state->output_position != -1 || computer_playing) {
+                    if (!(game_state->awaiting_promotion)) {
+                        make_move(game_state);
+                        game_ended = has_game_ended(game_state);
+
+                        if (game_ended) {
+                            if (game_ended == CHECK_MATE) {
+                                char winning_color =
+                                    game_state->move_history.count % 2 == 0
+                                        ? 'b'
+                                        : 'w';
+                                char *winner =
+                                    winning_color == 'w' ? "white" : "black";
+                                printf("The game is won by %s\n", winner);
+                            } else if (game_ended == STALE_MATE) {
+                                printf("The game ended in a draw!\n");
+                            }
+                        }
+
+                        if (computer_playing) {
+                            computer_playing = 0;
+                        }
+
+                        set_default_square(game_state);
+                    }
+                }
+                render_board(renderer, game_state);
+                redraw_board = 0;
+            }
+        } else {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    running = 0;
+                }
+            }
+        }
     }
 
     exit(EXIT_SUCCESS);
