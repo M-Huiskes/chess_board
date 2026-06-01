@@ -15,4 +15,5 @@ TODO spel:
     - Random bewoog de computer de kleur van de tegenpartij
         - Alleen nog koning voor wit, zwart was computer, random kwam er een koning bij
             Beste computer move was ook een move voor wit (terwijl computer zwart was)
+    - Diepte computer werkt niet goed -> malloc(): invalid next size (unsorted)
         
