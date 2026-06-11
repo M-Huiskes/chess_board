@@ -24,8 +24,11 @@ int calculate_evaluation(GameState *game_state)
 
     int game_end = has_game_ended(game_state);
     if (game_end == CHECK_MATE) {
+        // Dangerous, since a potential move is made, the counter is still + 1 here.
+        // So since we are trying to min/max for the color that was originally playing
+        // we need to swap colors here
         char color_playing =
-            game_state->move_history.count % 2 == 0 ? 'w' : 'b';
+            game_state->move_history.count % 2 == 0 ? 'b' : 'w';
         int max_score = color_playing == 'w' ? 9999 : -9999;
         evaluation = max_score;
     }

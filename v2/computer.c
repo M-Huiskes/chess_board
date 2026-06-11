@@ -12,6 +12,9 @@ int minimax(GameState *game_state, int depth, int is_maxing);
 static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                       int depth, int is_maxing, int best_score)
 {
+    printf("Calculing computer move for move %d\n",
+           game_state->move_history.count);
+    printf("=====================================================\n");
     for (int i = piece_start; i < piece_end; i++) {
         Piece *piece = get_piece_by_index(i, &(game_state->board));
         uint64_t piece_bb = piece->pos_bb;
@@ -36,6 +39,7 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
 
             // Loop over possible moves, make the move and continue recursively
             Square output_square = (Square){-1, -1};
+            int score;
             while (possible_moves) {
 
                 game_state->output_position =
@@ -71,6 +75,14 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
 
                         int score = minimax(game_state, depth - 1, !is_maxing);
 
+                        // Calculating evaluation with game end also updates
+                        // game
+                        // state, so change it back accordingly
+                        game_state->selected_square =
+                            square_from_position(position);
+                        game_state->bit_position = position;
+                        game_state->selected_piece = piece;
+
                         if (is_maxing ? score > best_score
                                       : score < best_score) {
                             best_score = score;
@@ -105,7 +117,7 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                     game_state->bit_position = position;
                     game_state->selected_piece = piece;
 
-                    int score = minimax(game_state, depth - 1, !is_maxing);
+                    score = minimax(game_state, depth - 1, !is_maxing);
 
                     game_state->selected_square =
                         square_from_position(position);
@@ -142,7 +154,7 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                         square_from_position(position);
                     game_state->bit_position = position;
                     game_state->selected_piece = piece;
-                    int score = minimax(game_state, depth - 1, !is_maxing);
+                    score = minimax(game_state, depth - 1, !is_maxing);
 
                     // Calculating evaluation with game end also updates game
                     // state, so change it back accordingly
@@ -172,10 +184,15 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                     promote_to = '0';
                 }
                 possible_moves &= possible_moves - 1;
+                printf("Evaluating computer move %c, from %d to %d with end "
+                       "score %d\n",
+                       piece->symbol, position, game_state->output_position,
+                       score);
             }
             piece_bb &= piece_bb - 1;
         }
     }
+    printf("=====================================================\n");
     return best_score;
 }
 

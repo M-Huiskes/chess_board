@@ -16,4 +16,5 @@ TODO spel:
         - Alleen nog koning voor wit, zwart was computer, random kwam er een koning bij
             Beste computer move was ook een move voor wit (terwijl computer zwart was)
     - Diepte computer werkt niet goed -> malloc(): invalid next size (unsorted)
+    - Soms error met computer die en passant berekent -> Did not find a piece to capture in en passant
         

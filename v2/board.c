@@ -653,6 +653,7 @@ int has_game_ended(GameState *game_state)
                 find_possible_moves(game_state, attack_moves_only);
 
             if (game_state->check_info.is_check) {
+                printf("Check in has game_ended\n");
                 possible_moves =
                     validate_moves_in_check(game_state, possible_moves);
             }
