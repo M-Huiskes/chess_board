@@ -123,6 +123,8 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                         square_from_position(position);
                     game_state->bit_position = position;
                     game_state->selected_piece = piece;
+                    game_state->output_position =
+                        get_lowest_bit_index(possible_moves);
 
                     if (is_maxing ? score > best_score : score < best_score) {
                         best_score = score;
