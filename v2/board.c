@@ -47,6 +47,12 @@ uint64_t get_full_bit_board(BoardState *board)
     return full_board;
 }
 
+char get_file_char(int file)
+{
+    char char_file = file + 'a';
+    return char_file;
+}
+
 uint64_t get_full_team_bit_board(BoardState *board, char color)
 {
     uint64_t full_board = (uint64_t) 0;

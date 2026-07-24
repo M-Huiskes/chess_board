@@ -32,5 +32,6 @@ char color_to_move(GameState *game_state);
 int is_enemy(char piece_color, int position, BoardState *board);
 void print_bitboard(uint64_t bitboard);
 int has_game_ended(GameState *game_state);
+char get_file_char(int file);
 
 #endif

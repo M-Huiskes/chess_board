@@ -184,10 +184,15 @@ static int eval_moves(GameState *game_state, int piece_start, int piece_end,
                     promote_to = '0';
                 }
                 possible_moves &= possible_moves - 1;
-                printf("Evaluating computer move %c, from %d to %d with end "
-                       "score %d\n",
-                       piece->symbol, position, game_state->output_position,
-                       score);
+                Square computer_input_square = square_from_position(position);
+                Square computer_output_square =
+                    square_from_position(game_state->output_position);
+                printf(
+                    "Evaluating computer move %c, from %c%d to %c%d with end "
+                    "score %d\n",
+                    piece->symbol, get_file_char(computer_input_square.file),
+                    (computer_input_square.row + 1), get_file_char(computer_output_square.file),
+                    (computer_output_square.row + 1), score);
             }
             piece_bb &= piece_bb - 1;
         }
